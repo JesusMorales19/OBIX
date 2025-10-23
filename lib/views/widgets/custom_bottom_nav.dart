@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../screens/contratista/home_view.dart';
 import '../screens/trabajador/home_view.dart';
 import '../screens/trabajador/jobs_employee.dart';
+import '../screens/contratista/jobs_active.dart';
 
 
 class CustomBottomNav extends StatefulWidget {
@@ -43,9 +44,9 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
         case 0:
           nextPage = const HomeViewContractor();
           break;
-      //   case 1:
-      //     nextPage = const TrabajosContratista();
-      //     break;
+        case 1:
+          nextPage = const JobsActive();
+          break;
       //   case 2:
       //     nextPage = const PerfilContratista();
       //     break;

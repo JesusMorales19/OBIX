@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 // ---------- IMPORTACIÓN DE TUS COMPONENTES ----------
 import '../../widgets/custom_bottom_nav.dart';
@@ -18,24 +19,17 @@ class HomeViewContractor extends StatelessWidget {
       bottomNavigationBar: const CustomBottomNav(
         role: 'contratista',
         currentIndex: 0,
-        ),
+      ),
 
       body: SafeArea(
         child: Column(
           children: [
-            // ---------- ENCABEZADO ----------
             const HeaderBar(),
             const SizedBox(height: 15),
-
-            // ---------- IMAGEN PRINCIPAL ----------
             const MainBanner(),
             const SizedBox(height: 25),
-
-            // ---------- BUSCADOR ----------
             const SearchAndFilterBar(),
             const SizedBox(height: 20),
-
-            // ---------- LISTA DE SERVICIOS ----------
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -51,8 +45,6 @@ class HomeViewContractor extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 10),
-
-                    // ---------- ALBAÑIL ----------
                     ServiceCategory(
                       title: 'Albañil',
                       workers: [
@@ -70,8 +62,6 @@ class HomeViewContractor extends StatelessWidget {
                         ),
                       ],
                     ),
-
-                    // ---------- ELECTRICISTA ----------
                     ServiceCategory(
                       title: 'Electricista',
                       workers: [
@@ -89,8 +79,6 @@ class HomeViewContractor extends StatelessWidget {
                         ),
                       ],
                     ),
-
-                    // ---------- CARPINTERA ----------
                     ServiceCategory(
                       title: 'Carpintero',
                       workers: [
@@ -117,11 +105,48 @@ class HomeViewContractor extends StatelessWidget {
         ),
       ),
 
-      // ---------- BOTÓN FLOTANTE ----------
-      floatingActionButton: FloatingActionButton(
+      // ---------- BOTÓN FLOTANTE CON OPCIONES TRANSPARENTES ----------
+      floatingActionButton: SpeedDial(
+        icon: Icons.add,
+        activeIcon: Icons.close,
         backgroundColor: const Color(0xFFE67E22),
-        onPressed: () {},
-        child: const Icon(Icons.add, color: Colors.white),
+        foregroundColor: Colors.white,
+        overlayColor: Colors.black,
+        overlayOpacity: 0.5,
+        spacing: 12,
+        spaceBetweenChildren: 8,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.work_outline, color: Colors.white, size: 28),
+            backgroundColor: Colors.blue,
+            label: 'Registro Trabajo Corto Plazo',
+            labelStyle: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
+            labelBackgroundColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 6,
+            onTap: () {
+              print('Corto plazo seleccionado');
+            },
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.work, color: Colors.white, size: 28),
+            backgroundColor: Colors.green,
+            label: 'Registro Trabajo Largo Plazo',
+            labelStyle: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
+            labelBackgroundColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 6,
+            onTap: () {
+              print('Largo plazo seleccionado');
+            },
+          ),
+        ],
       ),
     );
   }
