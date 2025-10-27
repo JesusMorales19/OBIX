@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../screens/contratista/see_more_employees.dart'; // Ajusta el import a tu ruta real
 
 class ServiceCategory extends StatelessWidget {
   final String title;
@@ -27,7 +28,14 @@ class ServiceCategory extends StatelessWidget {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SeeMoreEmployees(category: title),
+                  ),
+                );
+              },
               child: const Text(
                 'Ver más',
                 style: TextStyle(

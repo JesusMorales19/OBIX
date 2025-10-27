@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/custom_bottom_nav.dart';
 import '../../widgets/header_bar.dart';
 import '../../widgets/main_banner.dart';
-import '../../widgets/trabajador/worker_card_jobs.dart';
+import '../../widgets/trabajador/jobs_employee/worker_card_jobs.dart';
 
 class JobsViewEmployee extends StatelessWidget {
   const JobsViewEmployee({super.key});
@@ -18,7 +18,7 @@ class JobsViewEmployee extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const HeaderBar(),
+            const HeaderBar(tipoUsuario: 'trabajador'),
             const SizedBox(height: 15),
             const MainBanner(),
             const SizedBox(height: 25),

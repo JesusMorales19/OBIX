@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:integradora/views/widgets/contratista/jobs_active/show_modal_employees.dart';
 
 //
 // 🔹 CARD LARGO PLAZO
@@ -26,6 +27,7 @@ class JobCardLargo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _buildBaseCard(
+      context: context,
       title: title,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,6 +67,7 @@ class JobCardCorto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _buildBaseCard(
+      context: context,
       title: title,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,10 +86,11 @@ class JobCardCorto extends StatelessWidget {
 // 🔹 BASE CARD COMPARTIDA
 //
 Widget _buildBaseCard({
+  required BuildContext context,
   required String title,
   required Widget content,
 }) {
-  return Container(
+ return Container(
     margin: const EdgeInsets.only(bottom: 25),
     padding: const EdgeInsets.fromLTRB(15, 20, 15, 20),
     decoration: BoxDecoration(
@@ -132,7 +136,9 @@ Widget _buildBaseCard({
                     width: 150,
                     height: 30,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        showModalTrabajadores(context);
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF00AE0C),
                         shape: RoundedRectangleBorder(

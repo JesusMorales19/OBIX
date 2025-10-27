@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../screens/contratista/profile_view.dart';
 import '../screens/contratista/home_view.dart';
 import '../screens/trabajador/home_view.dart';
 import '../screens/trabajador/jobs_employee.dart';
 import '../screens/contratista/jobs_active.dart';
+import '../screens/trabajador/profile_view.dart';
 
 
 class CustomBottomNav extends StatefulWidget {
@@ -32,11 +34,11 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
         case 1:
           nextPage = const JobsViewEmployee();
           break;
-        // case 2:
-        //   nextPage = const PerfilTrabajador();
-        //   break;
-        // default:
-        //   nextPage = const HomeViewTrabajador();
+        case 2:
+          nextPage = const ProfileViewEmployees();
+          break;
+          default:
+          nextPage = const HomeViewEmployee();
       }
     } else {
       // Rol: contratista
@@ -47,11 +49,11 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
         case 1:
           nextPage = const JobsActive();
           break;
-      //   case 2:
-      //     nextPage = const PerfilContratista();
-      //     break;
-      //   default:
-      //     nextPage = const HomeViewContratista();
+        case 2:
+          nextPage = const ProfileView();
+          break;
+          default:
+          nextPage = const HomeViewContractor();
       }
     }
 

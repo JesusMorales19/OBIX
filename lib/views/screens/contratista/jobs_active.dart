@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../widgets/custom_bottom_nav.dart';
 import '../../widgets/header_bar.dart';
-import '../../widgets/contratista/job_card_widgets.dart';
-import '../../widgets/contratista/search_and_filter_bar_jobs.dart';
+import '../../widgets/contratista/jobs_active/job_card_widgets.dart';
+import '../../widgets/contratista/jobs_active/search_and_filter_bar_jobs.dart';
 
 class JobsActive extends StatelessWidget {
   const JobsActive({super.key});
@@ -18,7 +18,7 @@ class JobsActive extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const HeaderBar(),
+            const HeaderBar(tipoUsuario: 'contratista'),
             const SizedBox(height: 10),
 
             // Línea con inner shadow debajo del título
