@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:integradora/views/widgets/contratista/jobs_active/confirm_dismiss_modal.dart';
 
 void showModalTrabajadores(BuildContext context) {
   final List<Map<String, dynamic>> trabajadores = [
@@ -162,14 +163,7 @@ void showModalTrabajadores(BuildContext context) {
                                             // Botón Despedir
                                             GestureDetector(
                                               onTap: () {
-                                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                                  backgroundColor: Colors.orangeAccent.shade200,
-                                                  content: Text(
-                                                    'Has despedido a ${trabajador['nombre']}',
-                                                    style: const TextStyle(color: Colors.white),
-                                                  ),
-                                                  duration: const Duration(seconds: 2),
-                                                ));
+                                                showConfirmarDespedirModal(context, trabajador['nombre']);
                                               },
                                               child: Container(
                                                 width: double.infinity,
@@ -203,7 +197,7 @@ void showModalTrabajadores(BuildContext context) {
                                                 ),
                                               ),
                                             ),
-                                          ],
+                                                                                      ],
                                         ),
                                         // Corazón favorito
                                         Positioned(

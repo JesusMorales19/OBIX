@@ -47,6 +47,7 @@ class HomeViewEmployee extends StatelessWidget {
                     ),
                     JobCategory(
                       title: 'Trabajos Rápidos',
+                      tipoUsuario: 'trabajador',
                       jobs: [
                         WorkerCard(
                           title: 'Se busca yesero para detalle de casa',
@@ -69,6 +70,7 @@ class HomeViewEmployee extends StatelessWidget {
                     SizedBox(height: 25),
                     JobCategory(
                       title: 'Trabajos Largo Plazo',
+                      tipoUsuario: 'trabajador',
                       jobs: [
                         WorkerCard(
                           title: 'Construcción de una casa',
@@ -81,6 +83,15 @@ class HomeViewEmployee extends StatelessWidget {
                         ),
                       ],
                     ),
+                    //     WorkerCard(
+                    //       title: 'Construcción de una casa',
+                    //       status: 'Disponible',
+                    //       statusColor: Colors.green,
+                    //       ubication: 'Ubicación: UTD',
+                    //       payout: 'Según la categoría',
+                    //       isLongTerm: true,
+                    //       vacancies: 5,
+                    // ),
                     SizedBox(height: 80),
                   ],
                 ),

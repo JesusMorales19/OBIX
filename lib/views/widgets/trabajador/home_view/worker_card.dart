@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'modal_detail_short.dart';
+import 'modal_detail_length.dart';
+
 
 class WorkerCard extends StatelessWidget {
   final String title;
@@ -107,24 +110,55 @@ class WorkerCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextButton(
-                onPressed: () {},
-                style: TextButton.styleFrom(
-                  backgroundColor: const Color(0xF1F0F0F1),
-                  minimumSize: const Size(120, 40),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text(
-                  'Ver detalles',
-                  style: TextStyle(
-                    color: Color(0x62606062),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                  ),
+            TextButton(
+              onPressed: () {
+                if (isLongTerm) {
+                  // Mostrar modal de largo plazo
+                  ModalTrabajoLargo.show(
+                    context,
+                    titulo: title,
+                    descripcion: "Descripción del trabajo de largo plazo...",
+                    ubicacion: ubication,
+                    vacantes: vacancies ?? 0,
+                    frecuenciaPago: "Semanal",
+                    fechaInicio: "01/11/2025",
+                    fechaFinal: "31/03/2026",
+                    tipoObra: "Construcción de edificio",
+                  );
+                } else {
+                  // Mostrar modal de corto plazo
+                  ModalTrabajoCorto.show(
+                    context,
+                    titulo: title,
+                    descripcion: "Trabajo corto de reparación eléctrica urgente.",
+                    rangoPrecio: payout,
+                    ubicacion: ubication,
+                    fotos: [
+                      "https://images.unsplash.com/photo-1503387762-592deb58ef4e",
+                      "https://www.elesquiu.com/u/fotografias/m/2024/7/4/f1280x720-516936_648611_5050.jpg",
+                      "https://nanotechnology.com.ar/assets/images/trabajos/azm7gkdbivp6vq0gognmsd9o18n1cq.jpg"
+                    ],
+                    disponibilidad: "Inmediata",
+                    especialidad: "Electricista",
+                  );
+                }
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFFEAEAEA),
+                minimumSize: const Size(120, 40),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
+              child: const Text(
+                'Ver detalles',
+                style: TextStyle(
+                  color: Color(0xFF5A5A5A),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
               ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:integradora/views/widgets/contratista/jobs_active/modals_helper.dart';
 import 'package:integradora/views/widgets/contratista/jobs_active/show_modal_employees.dart';
 
 //
@@ -161,7 +162,9 @@ Widget _buildBaseCard({
                     width: 150,
                     height: 30,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        showEndJobFlow(context, ['Carlos Pérez', 'Luis García']);
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey.shade300,
                         shape: RoundedRectangleBorder(

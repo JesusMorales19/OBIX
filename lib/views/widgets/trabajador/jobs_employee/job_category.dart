@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../../screens/trabajador/see_more_jobs.dart';
 
 class JobCategory extends StatelessWidget {
   final String title;
   final List<Widget> jobs;
+  final String tipoUsuario; // nuevo parámetro
 
   const JobCategory({
     super.key,
     required this.title,
     required this.jobs,
+    required this.tipoUsuario,
   });
 
   @override
@@ -27,7 +30,18 @@ class JobCategory extends StatelessWidget {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                // 👇 Navega dependiendo del título
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => VerMasScreen(
+                      tipoUsuario: tipoUsuario,
+                      categoria: title,
+                    ),
+                  ),
+                );
+              },
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
                 minimumSize: const Size(40, 25),

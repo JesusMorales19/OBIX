@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:integradora/views/widgets/contratista/home_view/assign_modal_work.dart';
 import 'profile_modal.dart';
 
 class WorkerCard extends StatelessWidget {
@@ -155,7 +156,9 @@ class WorkerCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    showAsignarTrabajoModal(context, name);
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,

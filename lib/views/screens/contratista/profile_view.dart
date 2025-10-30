@@ -165,13 +165,13 @@ class _ProfileViewState extends State<ProfileView> {
                                     children: [
                                       Text(
                                         'Fecha de nacimiento: ',
-                                        style: TextStyle(fontSize: 14, color: Colors.black),
+                                        style: TextStyle(fontSize: 13.5, color: Colors.black),
                                       ),
                                       Text(
                                         '15/08/1990',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 14,
+                                          fontSize: 10,
                                         ),
                                       ),
                                     ],

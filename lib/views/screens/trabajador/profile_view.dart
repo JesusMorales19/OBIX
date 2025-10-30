@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:integradora/views/widgets/ChangePasswordDialog.dart';
+import 'package:integradora/views/widgets/trabajador/profile_view/reviews_modal.dart';
 import 'package:integradora/views/widgets/edit_dialog.dart';
 import '../login/login_view.dart'; // Asegúrate que la ruta sea correcta
 import '../../widgets/custom_bottom_nav.dart';
@@ -182,12 +183,17 @@ class _ProfileViewEmployeesState extends State<ProfileViewEmployees> {
                                     children: [
                                       _buildStars(),
                                       TextButton(
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          ReviewsModal.show(context);
+                                        },
                                         style: TextButton.styleFrom(
-                                            padding: EdgeInsets.zero,
-                                            minimumSize: const Size(50, 20)),
-                                        child: const Text('ver reseñas',
-                                            style: TextStyle(fontSize: 12)),
+                                          padding: EdgeInsets.zero,
+                                          minimumSize: const Size(50, 20),
+                                        ),
+                                        child: const Text(
+                                          'ver reseñas',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
                                       ),
                                     ],
                                   ),
