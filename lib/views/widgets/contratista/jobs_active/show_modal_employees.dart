@@ -188,7 +188,7 @@ void showModalTrabajadores(BuildContext context) {
                                                 ),
                                                 child: const Center(
                                                   child: Text(
-                                                    "Despedir",
+                                                    "Desvincular",
                                                     style: TextStyle(
                                                       color: Colors.white,
                                                       fontWeight: FontWeight.bold,

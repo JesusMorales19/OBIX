@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:integradora/views/widgets/contratista/jobs_active/modals_helper.dart';
 import 'package:integradora/views/widgets/contratista/jobs_active/show_modal_employees.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 //
 // 🔹 CARD LARGO PLAZO
@@ -8,22 +9,43 @@ import 'package:integradora/views/widgets/contratista/jobs_active/show_modal_emp
 class JobCardLargo extends StatelessWidget {
   final String title;
   final String frecuenciaPago;
-  final String ubicacion;
-  final String trabajadoresFaltantes;
+  final String vacantesDisponibles;
   final String tipoObra;
   final String fechaInicio;
   final String fechaFinal;
+  final double? latitud;
+  final double? longitud;
+  final String? direccion;
 
   const JobCardLargo({
     super.key,
     required this.title,
     required this.frecuenciaPago,
-    required this.ubicacion,
-    required this.trabajadoresFaltantes,
+    required this.vacantesDisponibles,
     required this.tipoObra,
     required this.fechaInicio,
     required this.fechaFinal,
+    this.latitud,
+    this.longitud,
+    this.direccion,
   });
+
+  Future<void> _abrirMapa(BuildContext context) async {
+    if (latitud == null || longitud == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay coordenadas disponibles para este trabajo.')),
+      );
+      return;
+    }
+
+    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitud,$longitud');
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir Maps.')), 
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,13 +55,15 @@ class JobCardLargo extends StatelessWidget {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _infoRow(
-              'Frecuencia de pago:', frecuenciaPago, 'Ubicación:', ubicacion),
-          _dividerLine(),
-          _infoRow('Trabajadores Faltantes:', trabajadoresFaltantes,
-              'Tipo de Obra:', tipoObra),
+          _infoRow('Frecuencia de pago:', frecuenciaPago, 'Vacantes disponibles:', vacantesDisponibles),
           _dividerLine(),
           _infoRow('Fecha Inicio:', fechaInicio, 'Fecha Final:', fechaFinal),
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: () => _abrirMapa(context),
+            icon: const Icon(Icons.map_outlined),
+            label: const Text('Ver ubicación en Maps'),
+          ),
         ],
       ),
     );
@@ -52,18 +76,41 @@ class JobCardLargo extends StatelessWidget {
 class JobCardCorto extends StatelessWidget {
   final String title;
   final String rangoPrecio;
-  final String ubicacion;
   final String especialidad;
   final String disponibilidad;
+  final double? latitud;
+  final double? longitud;
+  final String vacantesDisponibles;
+  final String? fechaCreacion;
 
   const JobCardCorto({
     super.key,
     required this.title,
     required this.rangoPrecio,
-    required this.ubicacion,
     required this.especialidad,
     required this.disponibilidad,
+    this.latitud,
+    this.longitud,
+    required this.vacantesDisponibles,
+    this.fechaCreacion,
   });
+
+  Future<void> _abrirMapa(BuildContext context) async {
+    if (latitud == null || longitud == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay coordenadas disponibles para este trabajo.')),
+      );
+      return;
+    }
+
+    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitud,$longitud');
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir Maps.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,10 +120,16 @@ class JobCardCorto extends StatelessWidget {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _infoRow('Rango de Precio:', rangoPrecio, 'Ubicación:', ubicacion),
+          _infoRow('Rango de Precio:', rangoPrecio, 'Vacantes disponibles:', vacantesDisponibles),
           _dividerLine(),
           _infoRow('Especialidad Requerida:', especialidad,
-              'Disponibilidad:', disponibilidad),
+              'Trabajo creado:', fechaCreacion ?? 'No especificada'),
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: () => _abrirMapa(context),
+            icon: const Icon(Icons.map_outlined),
+            label: const Text('Ver ubicación en Maps'),
+          ),
         ],
       ),
     );

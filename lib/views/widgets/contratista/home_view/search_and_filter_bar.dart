@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 
-class SearchAndFilterBar extends StatefulWidget {
-  const SearchAndFilterBar({super.key});
+class SearchAndFilterBar extends StatelessWidget {
+  final TextEditingController searchController;
+  final String selectedFilter;
+  final ValueChanged<String>? onFilterChanged;
+  final ValueChanged<String>? onSearchChanged;
 
-  @override
-  State<SearchAndFilterBar> createState() => _SearchAndFilterBarState();
-}
-
-class _SearchAndFilterBarState extends State<SearchAndFilterBar> {
-  String selectedOption = 'Todas'; // Valor por defecto
+  const SearchAndFilterBar({
+    super.key,
+    required this.searchController,
+    required this.selectedFilter,
+    this.onFilterChanged,
+    this.onSearchChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +24,14 @@ class _SearchAndFilterBarState extends State<SearchAndFilterBar> {
           Expanded(
             flex: 2,
             child: TextField(
+              controller: searchController,
+              onChanged: onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'Buscar......',
+                hintText: 'Buscar por nombre o categoría...',
                 hintStyle: const TextStyle(
                   color: Color(0xFF1F4E79),
                   fontWeight: FontWeight.bold,
+                  fontSize: 13,
                 ),
                 prefixIcon:
                     const Icon(Icons.search, color: Color(0xFF1F4E79), size: 40),
@@ -57,9 +64,9 @@ class _SearchAndFilterBarState extends State<SearchAndFilterBar> {
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
-                  value: selectedOption,
+                  value: selectedFilter,
                   icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF1F4E79)),
-                  items: <String>['Todas', 'Favoritos'].map((String value) {
+                  items: const <String>['Todas', 'Favoritos'].map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(
@@ -72,17 +79,8 @@ class _SearchAndFilterBarState extends State<SearchAndFilterBar> {
                     );
                   }).toList(),
                   onChanged: (newValue) {
-                    setState(() {
-                      selectedOption = newValue!;
-                    });
-
-                    // Si selecciona Favoritos, navegar a la pantalla correspondiente
-                    if (selectedOption == 'Favoritos') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const FavoritosScreen()),
-                      );
+                    if (newValue != null && onFilterChanged != null) {
+                      onFilterChanged!(newValue);
                     }
                   },
                 ),
@@ -90,27 +88,6 @@ class _SearchAndFilterBarState extends State<SearchAndFilterBar> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ------------------ PANTALLA FAVORITOS ------------------
-class FavoritosScreen extends StatelessWidget {
-  const FavoritosScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Favoritos'),
-        backgroundColor: const Color(0xFF1F4E79),
-      ),
-      body: const Center(
-        child: Text(
-          'Aquí van tus trabajadores favoritos',
-          style: TextStyle(fontSize: 18),
-        ),
       ),
     );
   }

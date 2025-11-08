@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 
 class SearchAndFilterBar extends StatelessWidget {
-  const SearchAndFilterBar({super.key});
+  final TextEditingController searchController;
+  final String? selectedFilter;
+  final ValueChanged<String?>? onFilterChanged;
+  final ValueChanged<String>? onSearchChanged;
+
+  const SearchAndFilterBar({
+    super.key,
+    required this.searchController,
+    this.selectedFilter,
+    this.onFilterChanged,
+    this.onSearchChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,8 +23,10 @@ class SearchAndFilterBar extends StatelessWidget {
           Expanded(
             flex: 1,
             child: TextField(
+              controller: searchController,
+              onChanged: onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'Buscar...',
+                hintText: 'Buscar por nombre...',
                 hintStyle: const TextStyle(color: Color(0xFF1F4E79), fontWeight: FontWeight.bold),
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF1F4E79)),
                 filled: true,
@@ -37,6 +50,7 @@ class SearchAndFilterBar extends StatelessWidget {
           Expanded(
             flex: 1,
             child: DropdownButtonFormField<String>(
+              value: selectedFilter,
               dropdownColor: Colors.white,
               decoration: InputDecoration(
                 filled: true,
@@ -55,20 +69,27 @@ class SearchAndFilterBar extends StatelessWidget {
                 ),
               ),
               hint: const Text(
-                'Selecciona',
+                'Todos',
                 style: TextStyle(color: Color(0xFF1F4E79), fontWeight: FontWeight.bold),
               ),
               items: const [
                 DropdownMenuItem(
-                    value: 'op1',
-                    child: Text('Opción 1',
-                        style: TextStyle(color: Color(0xFF1F4E79)))),
+                  value: null,
+                  child: Text('Todos',
+                      style: TextStyle(color: Color(0xFF1F4E79))),
+                ),
                 DropdownMenuItem(
-                    value: 'op2',
-                    child: Text('Opción 2',
-                        style: TextStyle(color: Color(0xFF1F4E79)))),
+                  value: 'largo',
+                  child: Text('Largo Plazo',
+                      style: TextStyle(color: Color(0xFF1F4E79))),
+                ),
+                DropdownMenuItem(
+                  value: 'corto',
+                  child: Text('Corto plazo',
+                      style: TextStyle(color: Color(0xFF1F4E79))),
+                ),
               ],
-              onChanged: (value) {},
+              onChanged: onFilterChanged,
             ),
           ),
         ],

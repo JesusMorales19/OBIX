@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../widgets/custom_notification.dart';
 
 void showCalificarTrabajadorModal(BuildContext context, String nombre) {
   int calificacion = 0;
@@ -91,13 +92,7 @@ void showCalificarTrabajadorModal(BuildContext context, String nombre) {
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      backgroundColor: const Color(0xFFE67E22),
-                      content: Text(
-                        'Has calificado a $nombre con $calificacion estrellas',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ));
+                    CustomNotification.showSuccess(context, 'Trabajador desvinculado y calificado exitosamente');
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 14),

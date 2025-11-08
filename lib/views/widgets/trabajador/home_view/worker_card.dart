@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'modal_detail_short.dart';
 import 'modal_detail_length.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 
 class WorkerCard extends StatelessWidget {
   final String title;
@@ -11,6 +11,17 @@ class WorkerCard extends StatelessWidget {
   final String payout;
   final bool isLongTerm;
   final int? vacancies;
+  final String? contratista;
+  final String? tipoObra;
+  final String? fechaInicio;
+  final String? fechaFinal;
+  final String? descripcion;
+  final String? payoutLabel;
+  final List<String>? imagenesBase64;
+  final String? disponibilidad;
+  final String? especialidad;
+  final double? latitud;
+  final double? longitud;
 
   const WorkerCard({
     super.key,
@@ -21,7 +32,35 @@ class WorkerCard extends StatelessWidget {
     required this.payout,
     required this.isLongTerm,
     this.vacancies,
+    this.contratista,
+    this.tipoObra,
+    this.fechaInicio,
+    this.fechaFinal,
+    this.descripcion,
+    this.payoutLabel,
+    this.imagenesBase64,
+    this.disponibilidad,
+    this.especialidad,
+    this.latitud,
+    this.longitud,
   });
+
+  Future<void> _abrirMapa(BuildContext context) async {
+    if (latitud == null || longitud == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay coordenadas disponibles para este trabajo.')),
+      );
+      return;
+    }
+
+    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitud,$longitud');
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo abrir Maps.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,89 +115,90 @@ class WorkerCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            'Pago: $payout',
-            style: const TextStyle(
-              color: Color(0xFF1F4E79),
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          if (payout.isNotEmpty) ...[
+            Text(
+              '${payoutLabel ?? 'Frecuencia de trabajo'}: $payout',
+              style: const TextStyle(
+                color: Color(0xFF1F4E79),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
+            const SizedBox(height: 6),
+          ],
+          if (ubication.isNotEmpty)
+            const SizedBox(height: 6),
+          TextButton.icon(
+            onPressed: () => _abrirMapa(context),
+            icon: const Icon(Icons.map_outlined),
+            label: const Text('Ver ubicación en Maps'),
           ),
-          const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                ubication,
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                ),
-              ),
-              if (isLongTerm && vacancies != null)
+              if (vacancies != null) ...[
+                const SizedBox(height: 6),
                 Text(
-                  'Vacantes: $vacancies',
+                  'Vacantes disponibles: $vacancies',
                   style: const TextStyle(
                     color: Colors.black87,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+              ],
             ],
           ),
           const SizedBox(height: 15),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-            TextButton(
-              onPressed: () {
-                if (isLongTerm) {
-                  // Mostrar modal de largo plazo
-                  ModalTrabajoLargo.show(
-                    context,
-                    titulo: title,
-                    descripcion: "Descripción del trabajo de largo plazo...",
-                    ubicacion: ubication,
-                    vacantes: vacancies ?? 0,
-                    frecuenciaPago: "Semanal",
-                    fechaInicio: "01/11/2025",
-                    fechaFinal: "31/03/2026",
-                    tipoObra: "Construcción de edificio",
-                  );
-                } else {
-                  // Mostrar modal de corto plazo
-                  ModalTrabajoCorto.show(
-                    context,
-                    titulo: title,
-                    descripcion: "Trabajo corto de reparación eléctrica urgente.",
-                    rangoPrecio: payout,
-                    ubicacion: ubication,
-                    fotos: [
-                      "https://images.unsplash.com/photo-1503387762-592deb58ef4e",
-                      "https://www.elesquiu.com/u/fotografias/m/2024/7/4/f1280x720-516936_648611_5050.jpg",
-                      "https://nanotechnology.com.ar/assets/images/trabajos/azm7gkdbivp6vq0gognmsd9o18n1cq.jpg"
-                    ],
-                    disponibilidad: "Inmediata",
-                    especialidad: "Electricista",
-                  );
-                }
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFFEAEAEA),
-                minimumSize: const Size(120, 40),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+              TextButton(
+                onPressed: () {
+                  if (isLongTerm) {
+                    // Mostrar modal de largo plazo con datos reales
+                    ModalTrabajoLargo.show(
+                      context,
+                      titulo: title,
+                      descripcion: descripcion ?? 'Sin descripción',
+                      contratistaNombre: contratista,
+                      vacantes: vacancies ?? 0,
+                      frecuenciaPago: payout,
+                      fechaInicio: fechaInicio ?? 'No especificada',
+                      fechaFinal: fechaFinal ?? 'No especificada',
+                      tipoObra: tipoObra ?? 'No especificado',
+                      direccion: ubication,
+                    );
+                  } else {
+                    // Mostrar modal de corto plazo
+                    ModalTrabajoCorto.show(
+                      context,
+                      titulo: title,
+                      descripcion: descripcion ?? 'Sin descripción',
+                      rangoPrecio: payout,
+                      ubicacion: ubication,
+                      fotos: imagenesBase64 ?? const [],
+                      disponibilidad: disponibilidad ?? 'No especificada',
+                      especialidad: especialidad ?? 'No especificada',
+                    );
+                  }
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFFEAEAEA),
+                  minimumSize: const Size(120, 40),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Ver detalles',
+                  style: TextStyle(
+                    color: Color(0xFF5A5A5A),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-              child: const Text(
-                'Ver detalles',
-                style: TextStyle(
-                  color: Color(0xFF5A5A5A),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
               ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(

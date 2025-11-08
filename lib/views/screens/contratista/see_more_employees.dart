@@ -3,6 +3,8 @@ import '../../widgets/header_bar.dart';
 import '../../widgets/main_banner.dart';
 import '../../widgets/contratista/home_view/worker_card.dart';
 import '../../widgets/contratista/home_view/filter_modal_see_more.dart';
+import '../../../services/api_service.dart';
+import '../../../services/storage_service.dart';
 
 class SeeMoreEmployees extends StatefulWidget {
   final String category;
@@ -21,12 +23,69 @@ class _SeeMoreEmployeesState extends State<SeeMoreEmployees> {
   final TextEditingController experienciaController = TextEditingController();
   final FocusNode experienciaFocusNode = FocusNode();
 
-  final List<Map<String, dynamic>> allWorkers = [
-    {'name': 'Jesus Morales Hernandez','edad': 28,'categoria': 'Albañil','descripcion': 'Especialista en muros y losas. Trabajo profesional.','status': 'Disponible','statusColor': Colors.green,'image': 'assets/images/albañil.png','rating': 4.8,'experiencia': 6},
-    {'name': 'Carlos López','edad': 32,'categoria': 'Carpintero','descripcion': 'Experto en muebles y acabados finos.','status': 'Ocupado','statusColor': Colors.red,'image': 'assets/images/carpintero.png','rating': 4.6,'experiencia': 8},
-    {'name': 'Luis García','edad': 40,'categoria': 'Electricista','descripcion': 'Instalaciones eléctricas residenciales y comerciales.','status': 'Disponible','statusColor': Colors.green,'image': 'assets/images/electricista.png','rating': 4.9,'experiencia': 10},
-    {'name': 'Pedro Díaz','edad': 24,'categoria': 'Albañil','descripcion': 'Ayudante con 2 años de experiencia.','status': 'Disponible','statusColor': Colors.green,'image': 'assets/images/albañil.png','rating': 4.2,'experiencia': 2},
-  ];
+  // Lista de trabajadores de la API
+  List<Map<String, dynamic>> allWorkers = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarTrabajadoresDeCategoria();
+  }
+
+  /// Carga TODOS los trabajadores de esta categoría desde la API
+  Future<void> _cargarTrabajadoresDeCategoria() async {
+    try {
+      setState(() => _isLoading = true);
+
+      // Obtener email del usuario logueado
+      final user = await StorageService.getUser();
+      if (user == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final email = user['email'];
+
+      // Buscar todos los trabajadores de esta categoría
+      final resultado = await ApiService.buscarTrabajadoresPorCategoria(
+        email,
+        widget.category,
+        radio: 500,
+      );
+
+      if (resultado['success'] == true) {
+        final data = resultado['data'];
+        final trabajadores = data['trabajadores'] as List<dynamic>;
+
+        // Convertir trabajadores de la API al formato de la UI
+        setState(() {
+          allWorkers = trabajadores.map((t) {
+            return {
+              'name': '${t['nombre']} ${t['apellido']}',
+              'edad': 0, // No tenemos edad en la BD
+              'categoria': t['categoria'],
+              'descripcion': 'Experiencia: ${t['experiencia']} años',
+              'status': t['disponible'] ? 'Disponible' : 'Ocupado',
+              'statusColor': t['disponible'] ? Colors.green : Colors.red,
+              'image': 'assets/images/construccion.png',
+              'rating': (t['calificacion_promedio'] ?? 0.0).toDouble(),
+              'experiencia': t['experiencia'] ?? 0,
+              'email': t['email'],
+              'telefono': t['telefono'],
+              'distancia_km': (t['distancia_km'] ?? 0.0).toDouble(),
+            };
+          }).toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      print('Error al cargar trabajadores: $e');
+      setState(() => _isLoading = false);
+    }
+  }
 
   List<Map<String, dynamic>> get filteredWorkers => allWorkers.where((w) {
     final edad = (w['edad'] as num).toDouble();
@@ -96,30 +155,34 @@ class _SeeMoreEmployeesState extends State<SeeMoreEmployees> {
             ),
             const SizedBox(height: 10),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.category, style: const TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 22)),
-                    const SizedBox(height: 20),
-                    if (filteredWorkers.isEmpty)
-                      const Text('No hay empleados que coincidan con los filtros seleccionados.', style: TextStyle(color: Colors.grey)),
-                    for (var worker in filteredWorkers)
-                      WorkerCard(
-                        name: worker['name'],
-                        edad: worker['edad'],
-                        categoria: worker['categoria'],
-                        descripcion: worker['descripcion'],
-                        status: worker['status'],
-                        statusColor: worker['statusColor'],
-                        image: worker['image'],
-                        rating: worker['rating'],
-                        experiencia: worker['experiencia'],
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(widget.category, style: const TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontSize: 22)),
+                          const SizedBox(height: 20),
+                          if (filteredWorkers.isEmpty)
+                            const Text('No hay empleados cercanos en esta categoría.', style: TextStyle(color: Colors.grey)),
+                          for (var worker in filteredWorkers)
+                            WorkerCard(
+                              name: worker['name'],
+                              edad: worker['edad'],
+                              categoria: worker['categoria'],
+                              descripcion: worker['descripcion'],
+                              status: worker['status'],
+                              statusColor: worker['statusColor'],
+                              image: worker['image'],
+                              rating: worker['rating'],
+                              experiencia: worker['experiencia'],
+                              email: worker['email'] ?? '',
+                              telefono: worker['telefono'] ?? '',
+                            ),
+                        ],
                       ),
-                  ],
-                ),
-              ),
+                    ),
             ),
           ],
         ),

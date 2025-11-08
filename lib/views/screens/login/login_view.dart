@@ -8,6 +8,10 @@ import '../../widgets/login_register/background_header.dart';
 import '../../widgets/login_register/input_field.dart';
 import '../../widgets/login_register/gradient_buttom.dart';
 import '../../widgets/login_register/register_redirect_text.dart';
+import '../../widgets/custom_notification.dart';
+import '../../../services/api_service.dart';
+import '../../../services/storage_service.dart';
+import '../../../services/location_service.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -17,53 +21,218 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  // 🔹 Usuarios de prueba
-  final Map<String, Map<String, String>> usuariosPrueba = {
-    "contratista": {
-      "email": "contratista@obix.com",
-      "password": "12345",
-    },
-    "trabajador": {
-      "email": "trabajador@obix.com",
-      "password": "12345",
-    },
-  };
-
   // 🔹 Controladores
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _emailOrUsernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   // 🔹 Estado para mostrar/ocultar contraseña
   bool _obscureText = true;
 
+  // 🔹 Estados para errores de validación
+  String? _emailOrUsernameError;
+  String? _passwordError;
+
+  // 🔹 Estado de carga
+  bool _isLoading = false;
+
+  // ---------- VALIDACIONES ----------
+  void _validateEmailOrUsername(String value) {
+    if (value.isEmpty) {
+      setState(() => _emailOrUsernameError = 'Email o username es requerido');
+    } else {
+      setState(() => _emailOrUsernameError = null);
+    }
+  }
+
+  bool _isValidPassword(String password) {
+    // Debe tener más de 8 caracteres, al menos una mayúscula, una minúscula y un número
+    if (password.length < 8) return false;
+    if (!password.contains(RegExp(r'[A-Z]'))) return false; // Al menos una mayúscula
+    if (!password.contains(RegExp(r'[a-z]'))) return false; // Al menos una minúscula
+    if (!password.contains(RegExp(r'[0-9]'))) return false; // Al menos un número
+    return true;
+  }
+
+  void _validatePassword(String password) {
+    if (password.isEmpty) {
+      setState(() => _passwordError = 'La contraseña es requerida');
+    } else if (password.length < 8) {
+      setState(() => _passwordError = 'La contraseña debe tener más de 8 caracteres');
+    } else if (!password.contains(RegExp(r'[A-Z]'))) {
+      setState(() => _passwordError = 'La contraseña debe contener al menos una mayúscula');
+    } else if (!password.contains(RegExp(r'[a-z]'))) {
+      setState(() => _passwordError = 'La contraseña debe contener al menos una minúscula');
+    } else if (!password.contains(RegExp(r'[0-9]'))) {
+      setState(() => _passwordError = 'La contraseña debe contener al menos un número');
+    } else {
+      setState(() => _passwordError = null);
+    }
+  }
+
+  bool get _isFormValid {
+    return _emailOrUsernameError == null &&
+        _passwordError == null &&
+        _emailOrUsernameController.text.trim().isNotEmpty &&
+        _passwordController.text.isNotEmpty &&
+        _isValidPassword(_passwordController.text);
+  }
+
   // ---------- FUNCIÓN LOGIN ----------
-  void _handleLogin() {
-    String email = _emailController.text.trim();
+  Future<void> _handleLogin() async {
+    String emailOrUsername = _emailOrUsernameController.text.trim();
     String password = _passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingresa tus datos.')),
-      );
+    // Validar campos
+    _validateEmailOrUsername(emailOrUsername);
+    _validatePassword(password);
+
+    // Si hay errores, no continuar
+    if (_emailOrUsernameError != null || _passwordError != null) {
       return;
     }
 
-    if (email == usuariosPrueba["contratista"]!["email"] &&
-        password == usuariosPrueba["contratista"]!["password"]) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeViewContractor()),
+    // Mostrar indicador de carga
+    setState(() => _isLoading = true);
+
+    try {
+      // Llamar a la API de login (el backend detecta automáticamente el tipo de usuario)
+      final resultado = await ApiService.login(
+        emailOrUsername,
+        password,
       );
-    } else if (email == usuariosPrueba["trabajador"]!["email"] &&
-        password == usuariosPrueba["trabajador"]!["password"]) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeViewEmployee()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Credenciales inválidas.')),
-      );
+
+      setState(() => _isLoading = false);
+
+      if (resultado['success'] == true) {
+        final data = resultado['data'];
+        // El backend devuelve: { success: true, token: ..., user: ... }
+        final token = data['token'];
+        final user = data['user'];
+
+        if (token == null || user == null) {
+          if (context.mounted) {
+            CustomNotification.showError(context, 'Error: Datos de respuesta inválidos');
+          }
+          return;
+        }
+
+        // Guardar token y datos del usuario
+        await StorageService.saveToken(token);
+        await StorageService.saveUser(user);
+
+        // Solicitar permiso de ubicación y guardar coordenadas
+        if (context.mounted) {
+          await _solicitarYGuardarUbicacion(user);
+        }
+
+        // Mostrar mensaje de éxito
+        if (context.mounted) {
+          CustomNotification.showSuccess(context, 'Inicio de sesión exitoso');
+          
+          // Redirigir según el tipo de usuario obtenido del backend
+          final tipoUsuario = user['tipoUsuario'];
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (context.mounted) {
+              if (tipoUsuario == 'contratista') {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeViewContractor()),
+                  (route) => false,
+                );
+              } else {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeViewEmployee()),
+                  (route) => false,
+                );
+              }
+            }
+          });
+        }
+      } else {
+        // Mostrar error
+        if (context.mounted) {
+          CustomNotification.showError(
+            context,
+            resultado['error'] ?? 'Error al iniciar sesión',
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (context.mounted) {
+        CustomNotification.showError(
+          context,
+          'Error de conexión: ${e.toString()}',
+        );
+      }
+    }
+  }
+
+  /// Solicita permiso de ubicación y guarda las coordenadas en el backend
+  Future<void> _solicitarYGuardarUbicacion(Map<String, dynamic> user) async {
+    try {
+      // Solicitar permiso de ubicación
+      final tienePermiso = await LocationService.solicitarPermisoUbicacion();
+      
+      if (!tienePermiso) {
+        // Mostrar diálogo preguntando si quiere habilitar ubicación
+        if (context.mounted) {
+          final habilitar = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Permiso de Ubicación'),
+              content: const Text(
+                'Para mostrarte trabajadores/trabajos cercanos, necesitamos acceso a tu ubicación.\n\n¿Deseas habilitar la ubicación?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Ahora no'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Habilitar'),
+                ),
+              ],
+            ),
+          );
+          
+          if (habilitar == true) {
+            await LocationService.abrirConfiguracion();
+          }
+        }
+        return;
+      }
+
+      // Obtener ubicación actual
+      final position = await LocationService.obtenerUbicacionActual();
+      
+      if (position != null) {
+        // Guardar ubicación en el backend
+        final email = user['email'];
+        final tipoUsuario = user['tipoUsuario'];
+        
+        final resultado = tipoUsuario == 'contratista'
+            ? await ApiService.actualizarUbicacionContratista(
+                email,
+                position.latitude,
+                position.longitude,
+              )
+            : await ApiService.actualizarUbicacionTrabajador(
+                email,
+                position.latitude,
+                position.longitude,
+              );
+
+        if (resultado['success'] == true) {
+          print('✅ Ubicación guardada: ${position.latitude}, ${position.longitude}');
+        } else {
+          print('⚠️ Error al guardar ubicación: ${resultado['error']}');
+        }
+      }
+    } catch (e) {
+      print('⚠️ Error al procesar ubicación: $e');
     }
   }
 
@@ -111,13 +280,18 @@ class _LoginViewState extends State<LoginView> {
                             ),
                             const SizedBox(height: 60),
 
-                            // ---------- INPUT EMAIL ----------
+                            // ---------- INPUT EMAIL/USERNAME ----------
                             InputField(
-                              controller: _emailController,
-                              hintText: 'User/email',
+                              controller: _emailOrUsernameController,
+                              hintText: 'Email o Username',
                               icon: Icons.person_outline,
+                              keyboardType: TextInputType.text,
+                              errorText: _emailOrUsernameError,
+                              onChanged: (value) {
+                                _validateEmailOrUsername(value.trim());
+                              },
                             ),
-                            const SizedBox(height: 60),
+                            const SizedBox(height: 40),
 
                             // ---------- INPUT PASSWORD ----------
                             InputField(
@@ -126,24 +300,31 @@ class _LoginViewState extends State<LoginView> {
                               icon: Icons.lock_outline,
                               isPassword: true,
                               obscureText: _obscureText,
+                              errorText: _passwordError,
                               toggleVisibility: () {
                                 setState(() {
                                   _obscureText = !_obscureText;
                                 });
                               },
+                              onChanged: (value) {
+                                _validatePassword(value);
+                              },
                             ),
-                            const SizedBox(height: 60),
+                            const SizedBox(height: 40),
 
                             // ---------- BOTÓN LOGIN ----------
-                            GradientButton(
-                              text: "LOGIN",
-                              onPressed: _handleLogin,
-                            ),
+                            _isLoading
+                                ? const CircularProgressIndicator()
+                                : GradientButton(
+                                    text: "LOGIN",
+                                    onPressed: _handleLogin,
+                                    enabled: _isFormValid && !_isLoading,
+                                  ),
                             const SizedBox(height: 60),
 
                             // ---------- TEXTO REGISTRO ----------
                             RegisterRedirectText(
-                              text: "Don’t have account? ",
+                              text: "Don't have account? ",
                               actionText: "Register",
                               onTap: () {
                                 Navigator.push(
@@ -154,6 +335,8 @@ class _LoginViewState extends State<LoginView> {
                                 );
                               },
                             ),
+                            const SizedBox(height: 20),
+                            
                           ],
                         ),
                       ),

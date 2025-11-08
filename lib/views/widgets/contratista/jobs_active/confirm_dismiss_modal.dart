@@ -36,7 +36,7 @@ void showConfirmarDespedirModal(BuildContext context, String nombre) {
               ),
               const SizedBox(height: 15),
               Text(
-                "¿Estás seguro que quieres despedir a $nombre?",
+                "¿Estás seguro que quieres desvincular a $nombre?",
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 18,

@@ -12,6 +12,8 @@ class WorkerCard extends StatelessWidget {
   final String image;
   final double rating;
   final int experiencia;
+  final String email;
+  final String telefono;
 
   const WorkerCard({
     super.key,
@@ -24,6 +26,8 @@ class WorkerCard extends StatelessWidget {
     required this.image,
     required this.rating,
     required this.experiencia,
+    required this.email,
+    required this.telefono,
   });
 
   @override
@@ -124,6 +128,8 @@ class WorkerCard extends StatelessWidget {
                     experiencia,
                     status,
                     statusColor,
+                    email,
+                    telefono,
                   );
                 },
                 style: TextButton.styleFrom(
