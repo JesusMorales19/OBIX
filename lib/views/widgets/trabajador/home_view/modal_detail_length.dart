@@ -10,12 +10,13 @@ class ModalTrabajoLargo {
     BuildContext context, {
     required String titulo,
     required String descripcion,
-    required String ubicacion,
     required int vacantes,
     required String frecuenciaPago,
     required String fechaInicio,
     required String fechaFinal,
     required String tipoObra,
+    String? contratistaNombre,
+    String? direccion,
   }) {
     showModalBottomSheet(
       context: context,
@@ -78,12 +79,15 @@ class ModalTrabajoLargo {
 
                       const SizedBox(height: 18),
 
-                      _info(Icons.place, 'Ubicación', ubicacion, primaryYellow),
-                      _info(Icons.people, 'Vacantes', '$vacantes', secondaryOrange),
-                      _info(Icons.payments, 'Frecuencia de pago', frecuenciaPago, primaryYellow),
-                      _info(Icons.date_range, 'Fecha de inicio', fechaInicio, secondaryOrange),
-                      _info(Icons.calendar_today, 'Fecha final', fechaFinal, primaryYellow),
-                      _info(Icons.apartment, 'Tipo de obra', tipoObra, secondaryOrange),
+                      if (contratistaNombre != null)
+                        _info(Icons.person, 'Contratista', contratistaNombre, primaryYellow),
+                      if (direccion != null && direccion.isNotEmpty)
+                        _info(Icons.place, 'Dirección', direccion, secondaryOrange),
+                      _info(Icons.people, 'Vacantes', '$vacantes', primaryYellow),
+                      _info(Icons.schedule, 'Frecuencia de trabajo', frecuenciaPago, secondaryOrange),
+                      _info(Icons.date_range, 'Fecha de inicio', fechaInicio, primaryYellow),
+                      _info(Icons.calendar_today, 'Fecha final', fechaFinal, secondaryOrange),
+                      _info(Icons.apartment, 'Tipo de obra', tipoObra, primaryYellow),
 
                       const SizedBox(height: 25),
                       Center(

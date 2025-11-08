@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:integradora/services/api_service.dart';
+import 'package:integradora/services/storage_service.dart';
+import 'package:integradora/views/widgets/custom_notification.dart';
 import 'review_card.dart';
 
 void showProfileModal(
@@ -12,6 +15,8 @@ void showProfileModal(
   int experiencia,
   String status,
   Color statusColor,
+  String emailTrabajador,
+  String telefono,
 ) {
   showModalBottomSheet(
     context: context,
@@ -36,6 +41,7 @@ void showProfileModal(
             image: image,
             rating: rating,
             experiencia: experiencia,
+            emailTrabajador: emailTrabajador,
           ),
         ),
       );
@@ -51,6 +57,7 @@ class _ProfileContent extends StatefulWidget {
   final String image;
   final double rating;
   final int experiencia;
+  final String emailTrabajador;
 
   const _ProfileContent({
     super.key,
@@ -61,6 +68,7 @@ class _ProfileContent extends StatefulWidget {
     required this.image,
     required this.rating,
     required this.experiencia,
+    required this.emailTrabajador,
   });
 
   @override
@@ -69,6 +77,120 @@ class _ProfileContent extends StatefulWidget {
 
 class _ProfileContentState extends State<_ProfileContent> {
   bool isFavorite = false;
+  bool isLoadingFavorite = true;
+  String? emailContratista;
+
+  @override
+  void initState() {
+    super.initState();
+    _cargarEstadoFavorito();
+  }
+
+  Future<void> _cargarEstadoFavorito() async {
+    try {
+      final user = await StorageService.getUser();
+      if (user != null) {
+        emailContratista = user['email'];
+        
+        // Verificar si ya está en favoritos
+        final resultado = await ApiService.verificarFavorito(
+          emailContratista!,
+          widget.emailTrabajador,
+        );
+        
+        if (resultado['success'] == true) {
+          setState(() {
+            isFavorite = resultado['esFavorito'] ?? false;
+            isLoadingFavorite = false;
+          });
+        } else {
+          setState(() => isLoadingFavorite = false);
+        }
+      }
+    } catch (e) {
+      print('Error al verificar favorito: $e');
+      setState(() => isLoadingFavorite = false);
+    }
+  }
+
+  Future<void> _toggleFavorito() async {
+    if (emailContratista == null) {
+      if (mounted) {
+        CustomNotification.showError(
+          context,
+          'No se pudo obtener el usuario',
+        );
+      }
+      return;
+    }
+
+    setState(() => isLoadingFavorite = true);
+
+    try {
+      Map<String, dynamic> resultado;
+      
+      if (isFavorite) {
+        // Quitar de favoritos
+        resultado = await ApiService.quitarFavorito(
+          emailContratista!,
+          widget.emailTrabajador,
+        );
+        
+        if (resultado['success'] == true) {
+          setState(() {
+            isFavorite = false;
+            isLoadingFavorite = false;
+          });
+          
+          if (mounted) {
+            CustomNotification.showInfo(
+              context,
+              'Quitado de favoritos',
+            );
+          }
+        }
+      } else {
+        // Agregar a favoritos
+        resultado = await ApiService.agregarFavorito(
+          emailContratista!,
+          widget.emailTrabajador,
+        );
+        
+        if (resultado['success'] == true) {
+          setState(() {
+            isFavorite = true;
+            isLoadingFavorite = false;
+          });
+          
+          if (mounted) {
+            CustomNotification.showSuccess(
+              context,
+              'Agregado a favoritos',
+            );
+          }
+        }
+      }
+      
+      // Manejar errores
+      if (resultado['success'] != true) {
+        setState(() => isLoadingFavorite = false);
+        if (mounted) {
+          CustomNotification.showError(
+            context,
+            resultado['error'] ?? "Error desconocido",
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => isLoadingFavorite = false);
+      if (mounted) {
+        CustomNotification.showError(
+          context,
+          'Error de red: $e',
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,21 +210,21 @@ class _ProfileContentState extends State<_ProfileContent> {
           children: [
             CircleAvatar(radius: 80, backgroundImage: AssetImage(widget.image)),
             Positioned(
-              bottom: -10, // más abajo
-              right: -10,  // más a la derecha
-              child: IconButton(
-                icon: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: isFavorite ? Colors.red : Colors.grey,
-                  size: 50, // tamaño grande
-                ),
-                onPressed: () {
-                  setState(() {
-                    isFavorite = !isFavorite;
-                    // Aquí después puedes llamar a tu backend para guardar el favorito
-                  });
-                },
-              ),
+              bottom: -10,
+              right: -10,
+              child: isLoadingFavorite
+                ? Container(
+                    padding: const EdgeInsets.all(12),
+                    child: const CircularProgressIndicator(strokeWidth: 3),
+                  )
+                : IconButton(
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: isFavorite ? Colors.red : Colors.grey.shade400,
+                      size: 50,
+                    ),
+                    onPressed: _toggleFavorito,
+                  ),
             ),
           ],
         ),
@@ -118,6 +240,18 @@ class _ProfileContentState extends State<_ProfileContent> {
         Text(
           '${widget.categoria}  •  ${widget.edad} años',
           style: const TextStyle(color: Colors.grey, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.email, color: Colors.grey, size: 16),
+            const SizedBox(width: 4),
+            Text(
+              widget.emailTrabajador,
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         Row(

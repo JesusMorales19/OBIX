@@ -4,12 +4,14 @@ class CustomDropdown extends StatefulWidget {
   final String label;
   final List<String> items;
   final double width; // 🔹 ancho uniforme
+  final ValueChanged<String>? onChanged; // 🔹 callback para cambios
 
   const CustomDropdown({
     super.key,
     required this.label,
     required this.items,
     this.width = 320,
+    this.onChanged,
   });
 
   @override
@@ -48,7 +50,12 @@ class _CustomDropdownState extends State<CustomDropdown> {
         items: widget.items
             .map((item) => DropdownMenuItem(value: item, child: Text(item)))
             .toList(),
-        onChanged: (value) => setState(() => selectedValue = value),
+        onChanged: (value) {
+          setState(() => selectedValue = value);
+          if (value != null && widget.onChanged != null) {
+            widget.onChanged!(value);
+          }
+        },
       ),
     );
   }

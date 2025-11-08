@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 
 class ModalTrabajoCorto {
   static const Color primaryYellow = Color(0xFFF5B400);
@@ -91,25 +92,45 @@ class ModalTrabajoCorto {
                       ),
                       const SizedBox(height: 10),
 
-                      SizedBox(
-                        height: 110,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: fotos.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 12),
-                          itemBuilder: (context, index) {
-                            return ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child: Image.network(
-                                fotos[index],
-                                width: 150,
-                                height: 100,
-                                fit: BoxFit.cover,
+                      fotos.isEmpty
+                          ? const Text(
+                              'No se proporcionaron imágenes para este trabajo.',
+                              style: TextStyle(color: Colors.grey),
+                            )
+                          : SizedBox(
+                              height: 110,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: fotos.length,
+                                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                                itemBuilder: (context, index) {
+                                  final base64Data = fotos[index];
+                                  try {
+                                    final bytes = base64Decode(base64Data);
+                                    return ClipRRect(
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Image.memory(
+                                        bytes,
+                                        width: 150,
+                                        height: 100,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    );
+                                  } catch (_) {
+                                    return Container(
+                                      width: 150,
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[300],
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: const Text('Imagen inválida'),
+                                    );
+                                  }
+                                },
                               ),
-                            );
-                          },
-                        ),
-                      ),
+                            ),
 
                       const SizedBox(height: 25),
                       Center(
