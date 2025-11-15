@@ -37,3 +37,11 @@ CREATE INDEX IF NOT EXISTS idx_trabajadores_categoria ON trabajadores(categoria)
 
 
 
+
+
+
+
+
+
+
+

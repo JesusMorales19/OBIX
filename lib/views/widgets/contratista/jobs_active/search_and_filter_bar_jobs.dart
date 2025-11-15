@@ -88,6 +88,16 @@ class SearchAndFilterBar extends StatelessWidget {
                   child: Text('Corto plazo',
                       style: TextStyle(color: Color(0xFF1F4E79))),
                 ),
+                DropdownMenuItem(
+                  value: 'en_proceso',
+                  child: Text('En proceso',
+                      style: TextStyle(color: Color(0xFF1F4E79))),
+                ),
+                DropdownMenuItem(
+                  value: 'terminado',
+                  child: Text('Terminado',
+                      style: TextStyle(color: Color(0xFF1F4E79))),
+                ),
               ],
               onChanged: onFilterChanged,
             ),

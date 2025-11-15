@@ -1,4 +1,5 @@
 import { query } from '../config/db.js';
+import { handleDatabaseError } from '../services/errorHandler.js';
 
 /**
  * Obtiene todas las categorías disponibles
@@ -14,14 +15,16 @@ export const getCategorias = async (req, res) => {
       data: result.rows,
     });
   } catch (error) {
-    console.error('Error al obtener categorías:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor',
-      details: error.message,
-    });
+    handleDatabaseError(error, res, 'Error al obtener categorías');
   }
 };
+
+
+
+
+
+
+
 
 
 

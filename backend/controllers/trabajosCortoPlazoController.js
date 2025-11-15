@@ -1,4 +1,5 @@
 import { query } from '../config/db.js';
+import { handleDatabaseError, handleValidationError } from '../services/errorHandler.js';
 
 /**
  * Registrar un nuevo trabajo de corto plazo
@@ -10,6 +11,7 @@ export const registrarTrabajoCortoPlazo = async (req, res) => {
       titulo,
       descripcion,
       rangoPago,
+      moneda = 'MXN',
       latitud,
       longitud,
       direccion,
@@ -20,24 +22,16 @@ export const registrarTrabajoCortoPlazo = async (req, res) => {
     } = req.body;
 
     if (!emailContratista || !titulo || !descripcion || !rangoPago) {
-      return res.status(400).json({
-        success: false,
-        error: 'Faltan campos requeridos',
-      });
+      return handleValidationError(res, 'Faltan campos requeridos');
     }
 
     if (vacantesDisponibles === undefined || vacantesDisponibles === null) {
-      return res.status(400).json({
-        success: false,
-        error: 'El número de vacantes es requerido',
-      });
+      return handleValidationError(res, 'El número de vacantes es requerido');
     }
 
-    if (!latitud || !longitud) {
-      return res.status(400).json({
-        success: false,
-        error: 'Se requieren coordenadas del trabajo',
-      });
+    // Validar que tenga al menos dirección o coordenadas
+    if ((!latitud || !longitud) && (!direccion || direccion.trim() === '')) {
+      return handleValidationError(res, 'Se requiere la ubicación del trabajo (coordenadas o dirección)');
     }
 
     const contratistaResult = await query(
@@ -46,10 +40,7 @@ export const registrarTrabajoCortoPlazo = async (req, res) => {
     );
 
     if (contratistaResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Contratista no encontrado',
-      });
+      return handleValidationError(res, 'Contratista no encontrado', 404);
     }
 
     const trabajoResult = await query(
@@ -61,20 +52,22 @@ export const registrarTrabajoCortoPlazo = async (req, res) => {
         longitud,
         direccion,
         rango_pago,
+        moneda,
         estado,
         vacantes_disponibles,
         disponibilidad,
         especialidad
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'activo', $8, $9, $10)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'activo', $9, $10, $11)
       RETURNING *`,
       [
         emailContratista,
         titulo,
         descripcion,
-        latitud,
-        longitud,
+        latitud || null,
+        longitud || null,
         direccion || null,
         rangoPago,
+        moneda,
         vacantesDisponibles,
         disponibilidad || null,
         especialidad || null,
@@ -102,12 +95,7 @@ export const registrarTrabajoCortoPlazo = async (req, res) => {
       data: trabajo,
     });
   } catch (error) {
-    console.error('❌ Error al registrar trabajo corto plazo:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor',
-      details: error.message,
-    });
+    handleDatabaseError(error, res, 'Error al registrar trabajo corto plazo');
   }
 };
 
@@ -119,10 +107,7 @@ export const obtenerTrabajosCortoPorContratista = async (req, res) => {
     const { emailContratista } = req.query;
 
     if (!emailContratista) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email del contratista es requerido',
-      });
+      return handleValidationError(res, 'Email del contratista es requerido');
     }
 
     const result = await query(
@@ -150,12 +135,7 @@ export const obtenerTrabajosCortoPorContratista = async (req, res) => {
       trabajos: result.rows,
     });
   } catch (error) {
-    console.error('❌ Error al obtener trabajos cortos:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor',
-      details: error.message,
-    });
+    handleDatabaseError(error, res, 'Error al obtener trabajos cortos');
   }
 };
 
@@ -167,30 +147,39 @@ export const buscarTrabajosCortoCercanos = async (req, res) => {
     const { emailTrabajador, radio = 500 } = req.query;
 
     if (!emailTrabajador) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email del trabajador es requerido',
-      });
+      return handleValidationError(res, 'Email del trabajador es requerido');
     }
 
     const trabajadorResult = await query(
-      'SELECT latitud, longitud FROM trabajadores WHERE email = $1',
+      `SELECT t.latitud, t.longitud, c.nombre AS categoria_nombre
+       FROM trabajadores t
+       LEFT JOIN categorias c ON t.categoria = c.id_categoria
+       WHERE t.email = $1`,
       [emailTrabajador]
     );
 
     if (trabajadorResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Trabajador no encontrado',
-      });
+      return handleValidationError(res, 'Trabajador no encontrado', 404);
     }
 
-    const { latitud: lat1, longitud: lon1 } = trabajadorResult.rows[0];
+    const { latitud: lat1, longitud: lon1, categoria_nombre: categoriaNombreRaw } =
+      trabajadorResult.rows[0];
 
     if (!lat1 || !lon1) {
-      return res.status(400).json({
-        success: false,
-        error: 'El trabajador no tiene ubicación registrada',
+      return handleValidationError(res, 'El trabajador no tiene ubicación registrada');
+    }
+
+    const categoriaNombre =
+      typeof categoriaNombreRaw === 'string' && categoriaNombreRaw.trim().length > 0
+        ? categoriaNombreRaw.trim()
+        : null;
+
+    if (!categoriaNombre) {
+      return res.status(200).json({
+        success: true,
+        total: 0,
+        radio_km: Number(radio),
+        trabajos: [],
       });
     }
 
@@ -201,6 +190,7 @@ export const buscarTrabajosCortoCercanos = async (req, res) => {
         trabajos.titulo,
         trabajos.descripcion,
         trabajos.rango_pago,
+        trabajos.moneda,
         trabajos.latitud,
         trabajos.longitud,
         trabajos.direccion,
@@ -227,24 +217,56 @@ export const buscarTrabajosCortoCercanos = async (req, res) => {
            c.nombre AS nombre_contratista,
            c.apellido AS apellido_contratista,
            c.telefono AS telefono_contratista,
-           (6371 * acos(
-             cos(radians($1)) * cos(radians(tcp.latitud)) * 
-             cos(radians(tcp.longitud) - radians($2)) + 
-             sin(radians($1)) * sin(radians(tcp.latitud))
-           )) AS distancia_km
+           CASE 
+             -- Si el trabajo tiene coordenadas, calcular distancia trabajo → trabajador
+             WHEN tcp.latitud IS NOT NULL AND tcp.longitud IS NOT NULL THEN
+               (6371 * acos(
+                 cos(radians($1)) * cos(radians(tcp.latitud)) * 
+                 cos(radians(tcp.longitud) - radians($2)) + 
+                 sin(radians($1)) * sin(radians(tcp.latitud))
+               ))
+             -- Si el trabajo NO tiene coordenadas pero tiene dirección, usar coordenadas del contratista
+             WHEN (tcp.latitud IS NULL OR tcp.longitud IS NULL) 
+                  AND (tcp.direccion IS NOT NULL AND tcp.direccion != '')
+                  AND c.latitud IS NOT NULL AND c.longitud IS NOT NULL THEN
+               (6371 * acos(
+                 cos(radians($1)) * cos(radians(c.latitud)) * 
+                 cos(radians(c.longitud) - radians($2)) + 
+                 sin(radians($1)) * sin(radians(c.latitud))
+               ))
+             ELSE NULL
+           END AS distancia_km
          FROM trabajos_corto_plazo tcp
          INNER JOIN contratistas c ON tcp.email_contratista = c.email
-         WHERE tcp.latitud IS NOT NULL 
-           AND tcp.longitud IS NOT NULL
-           AND tcp.estado = 'activo'
+         WHERE tcp.estado = 'activo'
+           AND LOWER(tcp.especialidad) = LOWER($4)
+           AND (
+             -- Trabajos con coordenadas dentro del radio
+             (tcp.latitud IS NOT NULL AND tcp.longitud IS NOT NULL AND
+              (6371 * acos(
+                cos(radians($1)) * cos(radians(tcp.latitud)) * 
+                cos(radians(tcp.longitud) - radians($2)) + 
+                sin(radians($1)) * sin(radians(tcp.latitud))
+              )) <= $3)
+             OR
+             -- Trabajos sin coordenadas pero con dirección: usar coordenadas del contratista
+             ((tcp.latitud IS NULL OR tcp.longitud IS NULL) 
+              AND (tcp.direccion IS NOT NULL AND tcp.direccion != '')
+              AND c.latitud IS NOT NULL AND c.longitud IS NOT NULL
+              AND (6371 * acos(
+                cos(radians($1)) * cos(radians(c.latitud)) * 
+                cos(radians(c.longitud) - radians($2)) + 
+                sin(radians($1)) * sin(radians(c.latitud))
+              )) <= $3)
+           )
        ) AS trabajos
        LEFT JOIN trabajos_corto_plazo_imagenes tci ON trabajos.id_trabajo_corto = tci.id_trabajo_corto
-       WHERE distancia_km <= $3
        GROUP BY trabajos.id_trabajo_corto,
                 trabajos.email_contratista,
                 trabajos.titulo,
                 trabajos.descripcion,
                 trabajos.rango_pago,
+                trabajos.moneda,
                 trabajos.latitud,
                 trabajos.longitud,
                 trabajos.direccion,
@@ -257,22 +279,19 @@ export const buscarTrabajosCortoCercanos = async (req, res) => {
                 trabajos.apellido_contratista,
                 trabajos.telefono_contratista,
                 trabajos.distancia_km
-       ORDER BY distancia_km ASC`,
-      [lat1, lon1, radio]
+       ORDER BY 
+         CASE WHEN trabajos.distancia_km IS NULL THEN 1 ELSE 0 END,
+         trabajos.distancia_km ASC NULLS LAST`,
+      [lat1, lon1, Number(radio), categoriaNombre]
     );
 
     res.status(200).json({
       success: true,
       total: result.rows.length,
-      radio_km: radio,
+      radio_km: Number(radio),
       trabajos: result.rows,
     });
   } catch (error) {
-    console.error('❌ Error al buscar trabajos cortos cercanos:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor',
-      details: error.message,
-    });
+    handleDatabaseError(error, res, 'Error al buscar trabajos cortos cercanos');
   }
 };

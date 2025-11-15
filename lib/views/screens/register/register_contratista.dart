@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 import '../../widgets/login_register/background_header.dart';
 import '../../widgets/login_register/input_field.dart';
 import '../../widgets/login_register/date_field.dart';
-import '../../widgets/login_register/build_drop_down.dart';
+import '../../widgets/login_register/build_drop_down.dart' show CustomDropdown;
 import '../../widgets/login_register/build_next_buttom.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/image_picker_modal.dart';
 import '../../../models/contratista_model.dart';
 import '../../../services/api_service.dart';
+import '../../../services/validation_service.dart';
 import '../../../utils/image_utils.dart';
+import '../../../utils/context_helper.dart';
 import '../login/login_view.dart';
 
 class RegisterContratista extends StatefulWidget {
@@ -54,49 +56,22 @@ class _RegisterContratistaState extends State<RegisterContratista> {
   String? _fotoBase64;
 
   // ---------- VALIDACIONES ----------
-  bool _isValidEmail(String email) {
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    return emailRegex.hasMatch(email);
-  }
-
-  bool _isValidPhone(String phone) {
-    final phoneRegex = RegExp(r'^[0-9]{10}$');
-    return phoneRegex.hasMatch(phone.replaceAll(RegExp(r'[\s-]'), ''));
-  }
-
-  bool _isValidDate(String date) {
-    // Formato esperado: DD/MM/YYYY o YYYY-MM-DD
-    final dateRegex = RegExp(r'^\d{2}/\d{2}/\d{4}$|^\d{4}-\d{2}-\d{2}$');
-    return dateRegex.hasMatch(date);
-  }
-
-  bool _isValidPassword(String password) {
-    // Debe tener más de 8 caracteres, al menos una mayúscula, una minúscula y un número
-    if (password.length < 8) return false;
-    if (!password.contains(RegExp(r'[A-Z]'))) return false; // Al menos una mayúscula
-    if (!password.contains(RegExp(r'[a-z]'))) return false; // Al menos una minúscula
-    if (!password.contains(RegExp(r'[0-9]'))) return false; // Al menos un número
-    return true;
-  }
-
   bool get _isStep1Valid {
-    return nombreController.text.trim().isNotEmpty &&
-        nombreController.text.trim().length >= 2 &&
-        apellidoController.text.trim().isNotEmpty &&
-        apellidoController.text.trim().length >= 2 &&
+    return ValidationService.isValidName(nombreController.text) &&
+        ValidationService.isValidName(apellidoController.text) &&
         fechaController.text.trim().isNotEmpty &&
-        _isValidDate(fechaController.text.trim());
+        ValidationService.isValidDate(fechaController.text.trim());
   }
 
   bool get _isStep2Valid {
     return correoController.text.trim().isNotEmpty &&
-        _isValidEmail(correoController.text.trim()) &&
+        ValidationService.isValidEmail(correoController.text.trim()) &&
         _generoSeleccionado != null &&
         _generoSeleccionado!.isNotEmpty &&
         telefonoController.text.trim().isNotEmpty &&
-        _isValidPhone(telefonoController.text.trim()) &&
+        ValidationService.isValidPhone(telefonoController.text.trim()) &&
         passwordController.text.isNotEmpty &&
-        _isValidPassword(passwordController.text) &&
+        ValidationService.isValidPassword(passwordController.text) &&
         confirmPasswordController.text.isNotEmpty &&
         passwordController.text == confirmPasswordController.text;
   }
@@ -105,37 +80,16 @@ class _RegisterContratistaState extends State<RegisterContratista> {
     bool isValid = true;
 
     // Validar nombre
-    if (nombreController.text.trim().isEmpty) {
-      setState(() => _nombreError = 'El nombre es requerido');
-      isValid = false;
-    } else if (nombreController.text.trim().length < 2) {
-      setState(() => _nombreError = 'El nombre debe tener al menos 2 caracteres');
-      isValid = false;
-    } else {
-      setState(() => _nombreError = null);
-    }
+    setState(() => _nombreError = ValidationService.getNameError(nombreController.text, fieldName: 'El nombre'));
+    if (_nombreError != null) isValid = false;
 
     // Validar apellido
-    if (apellidoController.text.trim().isEmpty) {
-      setState(() => _apellidoError = 'El apellido es requerido');
-      isValid = false;
-    } else if (apellidoController.text.trim().length < 2) {
-      setState(() => _apellidoError = 'El apellido debe tener al menos 2 caracteres');
-      isValid = false;
-    } else {
-      setState(() => _apellidoError = null);
-    }
+    setState(() => _apellidoError = ValidationService.getNameError(apellidoController.text, fieldName: 'El apellido'));
+    if (_apellidoError != null) isValid = false;
 
     // Validar fecha
-    if (fechaController.text.trim().isEmpty) {
-      setState(() => _fechaError = 'La fecha de nacimiento es requerida');
-      isValid = false;
-    } else if (!_isValidDate(fechaController.text.trim())) {
-      setState(() => _fechaError = 'Formato de fecha inválido (DD/MM/YYYY)');
-      isValid = false;
-    } else {
-      setState(() => _fechaError = null);
-    }
+    setState(() => _fechaError = ValidationService.getDateError(fechaController.text));
+    if (_fechaError != null) isValid = false;
 
     if (isValid && _currentStep < 1) {
       setState(() => _currentStep++);
@@ -150,15 +104,8 @@ class _RegisterContratistaState extends State<RegisterContratista> {
     bool isValid = true;
 
     // Validar correo
-    if (correoController.text.trim().isEmpty) {
-      setState(() => _correoError = 'El correo es requerido');
-      isValid = false;
-    } else if (!_isValidEmail(correoController.text.trim())) {
-      setState(() => _correoError = 'Ingresa un correo electrónico válido');
-      isValid = false;
-    } else {
-      setState(() => _correoError = null);
-    }
+    setState(() => _correoError = ValidationService.getEmailError(correoController.text));
+    if (_correoError != null) isValid = false;
 
     // Validar género
     if (_generoSeleccionado == null || _generoSeleccionado!.isEmpty) {
@@ -167,35 +114,12 @@ class _RegisterContratistaState extends State<RegisterContratista> {
     }
 
     // Validar teléfono
-    if (telefonoController.text.trim().isEmpty) {
-      setState(() => _telefonoError = 'El teléfono es requerido');
-      isValid = false;
-    } else if (!_isValidPhone(telefonoController.text.trim())) {
-      setState(() => _telefonoError = 'Ingresa un teléfono válido (10 dígitos)');
-      isValid = false;
-    } else {
-      setState(() => _telefonoError = null);
-    }
+    setState(() => _telefonoError = ValidationService.getPhoneError(telefonoController.text));
+    if (_telefonoError != null) isValid = false;
 
     // Validar contraseña
-    if (passwordController.text.isEmpty) {
-      setState(() => _passwordError = 'La contraseña es requerida');
-      isValid = false;
-    } else if (passwordController.text.length < 8) {
-      setState(() => _passwordError = 'La contraseña debe tener más de 8 caracteres');
-      isValid = false;
-    } else if (!passwordController.text.contains(RegExp(r'[A-Z]'))) {
-      setState(() => _passwordError = 'La contraseña debe contener al menos una mayúscula');
-      isValid = false;
-    } else if (!passwordController.text.contains(RegExp(r'[a-z]'))) {
-      setState(() => _passwordError = 'La contraseña debe contener al menos una minúscula');
-      isValid = false;
-    } else if (!passwordController.text.contains(RegExp(r'[0-9]'))) {
-      setState(() => _passwordError = 'La contraseña debe contener al menos un número');
-      isValid = false;
-    } else {
-      setState(() => _passwordError = null);
-    }
+    setState(() => _passwordError = ValidationService.getPasswordError(passwordController.text));
+    if (_passwordError != null) isValid = false;
 
     // Validar confirmación de contraseña
     if (confirmPasswordController.text.isEmpty) {
@@ -240,41 +164,27 @@ class _RegisterContratistaState extends State<RegisterContratista> {
       final resultado = await ApiService.registrarContratista(contratista);
 
       // Cerrar el indicador de carga
-      if (context.mounted) {
-        Navigator.pop(context);
-      }
+      ContextHelper.safePop(context);
 
       if (resultado['success'] == true) {
-        if (context.mounted) {
-          CustomNotification.showSuccess(context, 'Registro exitoso');
-          // Esperar un momento y luego redirigir al login
-          Future.delayed(const Duration(seconds: 1), () {
-            if (context.mounted) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginView()),
-                (route) => false,
-              );
-            }
-          });
-        }
+        ContextHelper.safeShowSuccess(context, 'Registro exitoso');
+        // Esperar un momento y luego redirigir al login
+        Future.delayed(const Duration(seconds: 1), () {
+          ContextHelper.safeNavigateAndRemoveUntil(context, const LoginView());
+        });
       } else {
-        if (context.mounted) {
-          CustomNotification.showError(
-            context,
-            resultado['error'] ?? 'Error al registrar',
-          );
-        }
+        ContextHelper.safeShowError(
+          context,
+          resultado['error'] ?? 'Error al registrar',
+        );
       }
     } catch (e) {
       // Cerrar el indicador de carga
-      if (context.mounted) {
-        Navigator.pop(context);
-        CustomNotification.showError(
-          context,
-          'Error de conexión. Verifica que el servidor esté corriendo.',
-        );
-      }
+      ContextHelper.safePop(context);
+      ContextHelper.safeShowError(
+        context,
+        'Error de conexión. Verifica que el servidor esté corriendo.',
+      );
     }
   }
 
@@ -309,43 +219,41 @@ class _RegisterContratistaState extends State<RegisterContratista> {
       final permisosConcedidos = await ImageUtils.solicitarPermisos();
       
       if (!permisosConcedidos) {
-        if (context.mounted) {
-          CustomNotification.showError(
-            context,
-            'Se necesitan permisos de cámara y galería para seleccionar una imagen',
-          );
-          
-          // Preguntar si quiere abrir configuración
-          final abrirConfig = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Permisos requeridos'),
-              content: const Text(
-                'Para seleccionar una imagen necesitas permitir el acceso a la cámara y galería. ¿Deseas abrir la configuración?',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancelar'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Abrir configuración'),
-                ),
-              ],
+        ContextHelper.safeShowError(
+          context,
+          'Se necesitan permisos de cámara y galería para seleccionar una imagen',
+        );
+        
+        // Preguntar si quiere abrir configuración
+        final abrirConfig = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Permisos requeridos'),
+            content: const Text(
+              'Para seleccionar una imagen necesitas permitir el acceso a la cámara y galería. ¿Deseas abrir la configuración?',
             ),
-          );
-          
-          if (abrirConfig == true) {
-            await ImageUtils.abrirConfiguracion();
-          }
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Abrir configuración'),
+              ),
+            ],
+          ),
+        );
+        
+        if (abrirConfig == true) {
+          await ImageUtils.abrirConfiguracion();
         }
         return;
       }
     }
 
     // Mostrar modal de selección
-    if (context.mounted) {
+    if (mounted) {
       showModalBottomSheet(
         context: context,
         backgroundColor: Colors.transparent,
@@ -363,21 +271,19 @@ class _RegisterContratistaState extends State<RegisterContratista> {
       final imagen = await ImageUtils.tomarFoto();
       if (imagen != null) {
         final base64 = await ImageUtils.imagenABase64(imagen);
-        if (base64 != null && context.mounted) {
-          setState(() {
-            _imagenSeleccionada = File(imagen.path);
-            _fotoBase64 = base64;
-          });
-        } else {
-          if (context.mounted) {
-            CustomNotification.showError(context, 'Error al procesar la imagen');
+        if (base64 != null) {
+          if (mounted) {
+            setState(() {
+              _imagenSeleccionada = File(imagen.path);
+              _fotoBase64 = base64;
+            });
           }
+        } else {
+          ContextHelper.safeShowError(context, 'Error al procesar la imagen');
         }
       }
     } catch (e) {
-      if (context.mounted) {
-        CustomNotification.showError(context, 'Error al tomar la foto: $e');
-      }
+      ContextHelper.safeShowError(context, 'Error al tomar la foto: $e');
     }
   }
 
@@ -387,21 +293,19 @@ class _RegisterContratistaState extends State<RegisterContratista> {
       final imagen = await ImageUtils.seleccionarDeGaleria();
       if (imagen != null) {
         final base64 = await ImageUtils.imagenABase64(imagen);
-        if (base64 != null && context.mounted) {
-          setState(() {
-            _imagenSeleccionada = File(imagen.path);
-            _fotoBase64 = base64;
-          });
-        } else {
-          if (context.mounted) {
-            CustomNotification.showError(context, 'Error al procesar la imagen');
+        if (base64 != null) {
+          if (mounted) {
+            setState(() {
+              _imagenSeleccionada = File(imagen.path);
+              _fotoBase64 = base64;
+            });
           }
+        } else {
+          ContextHelper.safeShowError(context, 'Error al procesar la imagen');
         }
       }
     } catch (e) {
-      if (context.mounted) {
-        CustomNotification.showError(context, 'Error al seleccionar la imagen: $e');
-      }
+      ContextHelper.safeShowError(context, 'Error al seleccionar la imagen: $e');
     }
   }
 
@@ -566,7 +470,7 @@ class _RegisterContratistaState extends State<RegisterContratista> {
           keyboardType: TextInputType.emailAddress,
           errorText: _correoError,
           onChanged: (value) {
-            if (value.trim().isNotEmpty && _isValidEmail(value.trim())) {
+            if (value.trim().isNotEmpty && ValidationService.isValidEmail(value.trim())) {
               setState(() => _correoError = null);
             }
           },
@@ -589,7 +493,7 @@ class _RegisterContratistaState extends State<RegisterContratista> {
           keyboardType: TextInputType.phone,
           errorText: _telefonoError,
           onChanged: (value) {
-            if (value.trim().isNotEmpty && _isValidPhone(value.trim())) {
+            if (value.trim().isNotEmpty && ValidationService.isValidPhone(value.trim())) {
               setState(() => _telefonoError = null);
             }
           },

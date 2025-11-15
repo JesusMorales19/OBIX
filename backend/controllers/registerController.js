@@ -1,6 +1,7 @@
 import { query } from '../config/db.js';
 import { extractUsernameFromEmail, convertDateFormat } from '../utils/emailUtils.js';
 import { hashPassword } from '../utils/passwordUtils.js';
+import { handleDatabaseError, handleValidationError } from '../services/errorHandler.js';
 
 /**
  * Registra un nuevo contratista
@@ -11,10 +12,7 @@ export const registerContratista = async (req, res) => {
 
     // Validar campos requeridos
     if (!nombre || !apellido || !fechaNacimiento || !email || !telefono || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Todos los campos son requeridos',
-      });
+      return handleValidationError(res, 'Todos los campos son requeridos');
     }
 
     // Extraer el user del email
@@ -30,10 +28,7 @@ export const registerContratista = async (req, res) => {
     );
 
     if (emailCheck.rows.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'El email ya está registrado',
-      });
+      return handleValidationError(res, 'El email ya está registrado', 409);
     }
 
     // Verificar si el username ya existe
@@ -83,12 +78,7 @@ export const registerContratista = async (req, res) => {
       data: result.rows[0],
     });
   } catch (error) {
-    console.error('Error al registrar contratista:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor',
-      details: error.message,
-    });
+    handleDatabaseError(error, res, 'Error al registrar contratista');
   }
 };
 
@@ -101,10 +91,7 @@ export const registerTrabajador = async (req, res) => {
 
     // Validar campos requeridos
     if (!nombre || !apellido || !fechaNacimiento || !email || !telefono || !experiencia || !categoria || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Todos los campos son requeridos',
-      });
+      return handleValidationError(res, 'Todos los campos son requeridos');
     }
 
     // Extraer el user del email
@@ -120,10 +107,7 @@ export const registerTrabajador = async (req, res) => {
     );
 
     if (emailCheck.rows.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'El email ya está registrado',
-      });
+      return handleValidationError(res, 'El email ya está registrado', 409);
     }
 
     // Verificar si el username ya existe
@@ -203,12 +187,7 @@ export const registerTrabajador = async (req, res) => {
       data: responseData,
     });
   } catch (error) {
-    console.error('Error al registrar trabajador:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor',
-      details: error.message,
-    });
+    handleDatabaseError(error, res, 'Error al registrar trabajador');
   }
 };
 

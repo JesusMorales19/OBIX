@@ -1,6 +1,7 @@
 import { query } from '../config/db.js';
 import { comparePassword } from '../utils/passwordUtils.js';
 import jwt from 'jsonwebtoken';
+import { handleDatabaseError, handleValidationError, handleError } from '../services/errorHandler.js';
 
 /**
  * Inicia sesión de un contratista o trabajador
@@ -13,10 +14,7 @@ export const login = async (req, res) => {
 
     // Validar campos requeridos
     if (!emailOrUsername || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email/username y contraseña son requeridos',
-      });
+      return handleValidationError(res, 'Email/username y contraseña son requeridos');
     }
 
     let user = null;
@@ -50,20 +48,14 @@ export const login = async (req, res) => {
 
     // Verificar si el usuario existe
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Credenciales inválidas',
-      });
+      return handleValidationError(res, 'Credenciales inválidas', 401);
     }
 
     // Verificar contraseña
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        error: 'Credenciales inválidas',
-      });
+      return handleValidationError(res, 'Credenciales inválidas', 401);
     }
 
     // Generar JWT token (usando email como identificador único ya que no hay id)
@@ -95,12 +87,7 @@ export const login = async (req, res) => {
       user: userData,
     });
   } catch (error) {
-    console.error('Error al hacer login:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor',
-      details: error.message,
-    });
+    handleError(error, res, 'Error al hacer login');
   }
 };
 
@@ -112,10 +99,7 @@ export const verifyToken = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1]; // Bearer token
 
     if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: 'Token no proporcionado',
-      });
+      return handleValidationError(res, 'Token no proporcionado', 401);
     }
 
     const decoded = jwt.verify(
@@ -129,16 +113,10 @@ export const verifyToken = async (req, res) => {
     });
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        error: 'Token expirado',
-      });
+      return handleValidationError(res, 'Token expirado', 401);
     }
 
-    res.status(401).json({
-      success: false,
-      error: 'Token inválido',
-    });
+    handleValidationError(res, 'Token inválido', 401);
   }
 };
 

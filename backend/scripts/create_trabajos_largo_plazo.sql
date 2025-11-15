@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS trabajos_largo_plazo (
   CONSTRAINT fk_trabajos_largo_contratista 
     FOREIGN KEY (email_contratista) 
     REFERENCES contratistas(email) 
-    ON DELETE CASCADE,
+    ON DELETE CASCADE ON UPDATE CASCADE,
   
   -- Constraints de validación
   CONSTRAINT check_vacantes_positivas CHECK (vacantes_disponibles >= 0),

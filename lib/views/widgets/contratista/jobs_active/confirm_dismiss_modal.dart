@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:integradora/views/widgets/contratista/jobs_active/rate_worker_modal.dart';
 
-void showConfirmarDespedirModal(BuildContext context, String nombre) {
+void showConfirmarDespedirModal(
+  BuildContext context, {
+  required String nombre,
+  required String emailContratista,
+  required String emailTrabajador,
+  required int idAsignacion,
+  required BuildContext parentContext,
+  Future<void> Function()? onCompleted,
+}) {
   showDialog(
     context: context,
     builder: (context) {
@@ -13,7 +21,7 @@ void showConfirmarDespedirModal(BuildContext context, String nombre) {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFFF5B400), Color(0xFFE67E22)],
+              colors: [Color.fromARGB(255, 255, 255, 255), Color.fromARGB(255, 255, 255, 255)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -32,7 +40,7 @@ void showConfirmarDespedirModal(BuildContext context, String nombre) {
               const Icon(
                 Icons.warning_amber_rounded,
                 size: 60,
-                color: Colors.white,
+                color: Colors.orange,
               ),
               const SizedBox(height: 15),
               Text(
@@ -40,15 +48,8 @@ void showConfirmarDespedirModal(BuildContext context, String nombre) {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black26,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
+                  color: Colors.black,
+                  fontWeight: FontWeight.normal
                 ),
               ),
               const SizedBox(height: 25),
@@ -60,6 +61,7 @@ void showConfirmarDespedirModal(BuildContext context, String nombre) {
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       backgroundColor: Colors.white.withOpacity(0.9),
+                      side: const BorderSide(color: Color(0xFF1F4E79)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -69,18 +71,28 @@ void showConfirmarDespedirModal(BuildContext context, String nombre) {
                       style: TextStyle(
                         color: Color(0xFF1F4E79),
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.bold
                       ),
                     ),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context); // Cierra confirmación
-                      showCalificarTrabajadorModal(context, nombre);
+                      Future.microtask(() {
+                        showCalificarTrabajadorModal(
+                          parentContext,
+                          parentContext: parentContext,
+                          nombre: nombre,
+                          emailContratista: emailContratista,
+                          emailTrabajador: emailTrabajador,
+                          idAsignacion: idAsignacion,
+                          onCompleted: onCompleted,
+                        );
+                      });
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
-                      backgroundColor: Colors.white,
+                      backgroundColor: Color(0xFF1F4E79),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -88,7 +100,7 @@ void showConfirmarDespedirModal(BuildContext context, String nombre) {
                     child: const Text(
                       "Aceptar",
                       style: TextStyle(
-                        color: Color(0xFFE67E22),
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),

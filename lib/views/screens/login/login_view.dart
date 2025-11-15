@@ -12,6 +12,8 @@ import '../../widgets/custom_notification.dart';
 import '../../../services/api_service.dart';
 import '../../../services/storage_service.dart';
 import '../../../services/location_service.dart';
+import '../../../services/notification_service.dart';
+import '../../../services/validation_service.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -44,29 +46,8 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
-  bool _isValidPassword(String password) {
-    // Debe tener más de 8 caracteres, al menos una mayúscula, una minúscula y un número
-    if (password.length < 8) return false;
-    if (!password.contains(RegExp(r'[A-Z]'))) return false; // Al menos una mayúscula
-    if (!password.contains(RegExp(r'[a-z]'))) return false; // Al menos una minúscula
-    if (!password.contains(RegExp(r'[0-9]'))) return false; // Al menos un número
-    return true;
-  }
-
   void _validatePassword(String password) {
-    if (password.isEmpty) {
-      setState(() => _passwordError = 'La contraseña es requerida');
-    } else if (password.length < 8) {
-      setState(() => _passwordError = 'La contraseña debe tener más de 8 caracteres');
-    } else if (!password.contains(RegExp(r'[A-Z]'))) {
-      setState(() => _passwordError = 'La contraseña debe contener al menos una mayúscula');
-    } else if (!password.contains(RegExp(r'[a-z]'))) {
-      setState(() => _passwordError = 'La contraseña debe contener al menos una minúscula');
-    } else if (!password.contains(RegExp(r'[0-9]'))) {
-      setState(() => _passwordError = 'La contraseña debe contener al menos un número');
-    } else {
-      setState(() => _passwordError = null);
-    }
+    setState(() => _passwordError = ValidationService.getPasswordError(password));
   }
 
   bool get _isFormValid {
@@ -74,7 +55,7 @@ class _LoginViewState extends State<LoginView> {
         _passwordError == null &&
         _emailOrUsernameController.text.trim().isNotEmpty &&
         _passwordController.text.isNotEmpty &&
-        _isValidPassword(_passwordController.text);
+        ValidationService.isValidPassword(_passwordController.text);
   }
 
   // ---------- FUNCIÓN LOGIN ----------
@@ -119,6 +100,15 @@ class _LoginViewState extends State<LoginView> {
         // Guardar token y datos del usuario
         await StorageService.saveToken(token);
         await StorageService.saveUser(user);
+
+        final emailUsuario = user['email'] as String?;
+        final tipoUsuario = user['tipoUsuario'] as String?;
+        if (emailUsuario != null && tipoUsuario != null) {
+          await NotificationService.instance.configureForUser(
+            email: emailUsuario,
+            tipoUsuario: tipoUsuario,
+          );
+        }
 
         // Solicitar permiso de ubicación y guardar coordenadas
         if (context.mounted) {

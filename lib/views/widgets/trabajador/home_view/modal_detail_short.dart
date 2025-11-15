@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:typed_data';
 
 class ModalTrabajoCorto {
   static const Color primaryYellow = Color(0xFFF5B400);
@@ -12,10 +13,10 @@ class ModalTrabajoCorto {
     required String titulo,
     required String descripcion,
     required String rangoPrecio,
-    required String ubicacion,
     required List<String> fotos,
     required String disponibilidad,
     required String especialidad,
+    String? contratistaNombre,
   }) {
     showModalBottomSheet(
       context: context,
@@ -80,8 +81,9 @@ class ModalTrabajoCorto {
                       ),
 
                       const SizedBox(height: 18),
+                      if (contratistaNombre != null && contratistaNombre.isNotEmpty)
+                        _buildInfo(Icons.person, 'Contratista', contratistaNombre, primaryYellow),
                       _buildInfo(Icons.attach_money, 'Rango de precio', rangoPrecio, primaryYellow),
-                      _buildInfo(Icons.place, 'Ubicación', ubicacion, secondaryOrange),
                       _buildInfo(Icons.access_time, 'Disponibilidad', disponibilidad, primaryYellow),
                       _buildInfo(Icons.build, 'Especialidad requerida', especialidad, secondaryOrange),
 
@@ -107,13 +109,16 @@ class ModalTrabajoCorto {
                                   final base64Data = fotos[index];
                                   try {
                                     final bytes = base64Decode(base64Data);
-                                    return ClipRRect(
-                                      borderRadius: BorderRadius.circular(14),
-                                      child: Image.memory(
-                                        bytes,
-                                        width: 150,
-                                        height: 100,
-                                        fit: BoxFit.cover,
+                                    return GestureDetector(
+                                      onTap: () => _showImagePreview(context, bytes, titulo),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(14),
+                                        child: Image.memory(
+                                          bytes,
+                                          width: 150,
+                                          height: 100,
+                                          fit: BoxFit.cover,
+                                        ),
                                       ),
                                     );
                                   } catch (_) {
@@ -177,6 +182,47 @@ class ModalTrabajoCorto {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  static Future<void> _showImagePreview(
+    BuildContext context,
+    Uint8List imageBytes,
+    String titulo,
+  ) async {
+    await showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: GestureDetector(
+          onTap: () => Navigator.of(ctx).pop(),
+          child: Stack(
+            children: [
+              InteractiveViewer(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.memory(
+                    imageBytes,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 12,
+                right: 12,
+                child: CircleAvatar(
+                  backgroundColor: Colors.black54,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

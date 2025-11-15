@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import '../../../../services/api_service.dart';
+import '../../../../services/format_service.dart';
 
 class ReviewsModal {
   // Paleta del usuario
@@ -7,206 +10,245 @@ class ReviewsModal {
   static const Color whiteColor = Color(0xFFFFFFFF); // FFFFFF
   static const Color lightGray = Color(0xFFEAEAEA); // EAEAEA (usé EAEAEA como gris claro)
 
-  static void show(BuildContext context) {
-    final List<Map<String, dynamic>> reviews = [
-      {
-        'contratista': 'Juan Pérez',
-        'resena': 'Excelente trabajo, muy puntual y profesional.',
-        'calificacion': 5.0
-      },
-      {
-        'contratista': 'María Gómez',
-        'resena': 'Buen trabajo, aunque tardó un poco más de lo esperado.',
-        'calificacion': 4.0
-      },
-      {
-        'contratista': 'Carlos López',
-        'resena': 'Trabajo aceptable, pero podría mejorar la limpieza del área.',
-        'calificacion': 3.5
-      },
-    ];
-
+  static void show(
+    BuildContext context, {
+    required String emailTrabajador,
+    double? promedioActual,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.62,
-          minChildSize: 0.4,
-          maxChildSize: 0.92,
-          builder: (context, scrollController) {
-            return Container(
-              decoration: BoxDecoration(
-                color: whiteColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
-                    blurRadius: 15,
-                    offset: const Offset(0, -5),
-                  )
-                ],
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              child: Column(
-                children: [
-                  // Handle
-                  Container(
-                    width: 42,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: lightGray,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
+        return FutureBuilder<Map<String, dynamic>>(
+          future: ApiService.obtenerCalificacionesTrabajador(emailTrabajador),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 240,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-                  // Título y promedio (ejemplo)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Reseñas del trabajador',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                _buildStars(4.2, size: 16), // ejemplo promedio
-                                const SizedBox(width: 8),
-                                Text(
-                                  '4.2',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '(3 reseñas)',
-                                  style: TextStyle(color: Colors.grey[500], fontSize: 13),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+            if (snapshot.hasError) {
+              return _buildErrorContent(
+                context,
+                snapshot.error?.toString() ?? 'Error desconocido',
+              );
+            }
 
-                      // Botón cerrar rápido
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: lightGray,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.close, size: 18, color: Colors.grey[700]),
-                        ),
+            if (snapshot.data?['success'] != true) {
+              return _buildErrorContent(
+                context,
+                snapshot.data?['error']?.toString() ??
+                    'No fue posible cargar las reseñas.',
+              );
+            }
+
+            final List<Map<String, dynamic>> reviews =
+                (snapshot.data?['data'] as List<dynamic>? ?? [])
+                    .map((e) => Map<String, dynamic>.from(e as Map<String, dynamic>))
+                    .toList();
+
+            final double promedio = promedioActual ??
+                (reviews.isEmpty
+                    ? 0
+                    : reviews
+                            .map((e) => FormatService.parseDouble(e['estrellas']))
+                            .fold<double>(0, (prev, element) => prev + element) /
+                        reviews.length);
+
+            return DraggableScrollableSheet(
+              initialChildSize: 0.62,
+              minChildSize: 0.4,
+              maxChildSize: 0.92,
+              builder: (context, scrollController) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: whiteColor,
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(28)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.12),
+                        blurRadius: 15,
+                        offset: const Offset(0, -5),
                       )
                     ],
                   ),
-
-                  const SizedBox(height: 12),
-
-                  // Lista de reseñas
-                  Expanded(
-                    child: ListView.builder(
-                      controller: scrollController,
-                      itemCount: reviews.length,
-                      padding: const EdgeInsets.only(bottom: 20, top: 6),
-                      itemBuilder: (context, index) {
-                        final r = reviews[index];
-                        return Container(
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: lightGray.withOpacity(0.4),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Avatar con iniciales
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: primaryYellow,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.06),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 3),
-                                    )
-                                  ],
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    _initials(r['contratista']),
-                                    style: const TextStyle(
-                                      color: whiteColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: lightGray,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Reseñas del trabajador',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ),
-
-                              const SizedBox(width: 12),
-
-                              // Contenido
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                const SizedBox(height: 4),
+                                Row(
                                   children: [
-                                    // Nombre y calificación
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            r['contratista'],
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                        ),
-                                        _buildStars(r['calificacion'], size: 16),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 6),
-
-                                    // Texto de la reseña
+                                    _buildStars(promedio, size: 16),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      r['resena'],
+                                      promedio.toStringAsFixed(1),
                                       style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[800],
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey[700],
                                       ),
-                                    )
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '(${reviews.length} reseñas)',
+                                      style: TextStyle(
+                                        color: Colors.grey[500],
+                                        fontSize: 13,
+                                      ),
+                                    ),
                                   ],
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        );
-                      },
-                    ),
+                          GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: lightGray,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.close,
+                                  size: 18, color: Colors.grey[700]),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: reviews.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'Aún no hay reseñas para este trabajador.',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                controller: scrollController,
+                                itemCount: reviews.length,
+                                padding:
+                                    const EdgeInsets.only(bottom: 20, top: 6),
+                                itemBuilder: (context, index) {
+                                  final r = reviews[index];
+                                  final nombre = [
+                                    (r['nombre_contratista'] ?? '').toString().trim(),
+                                    (r['apellido_contratista'] ?? '').toString().trim(),
+                                  ]
+                                      .where((element) => element.isNotEmpty)
+                                      .join(' ');
+                                  final calificacion = FormatService.parseDouble(r['estrellas']);
+                                  final resena = (r['resena'] ?? '')
+                                      .toString()
+                                      .trim();
+                                  final foto = r['foto_contratista'] as String?;
+
+                                  return Container(
+                                    margin:
+                                        const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: lightGray.withOpacity(0.4),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 26,
+                                          backgroundImage: _buildAvatar(foto),
+                                          backgroundColor: primaryYellow,
+                                          child: foto == null
+                                              ? Text(
+                                                  _initials(nombre),
+                                                  style: const TextStyle(
+                                                    color: whiteColor,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                )
+                                              : null,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      nombre.isEmpty
+                                                          ? r['email_contratista']
+                                                                  ?.toString() ??
+                                                              'Contratista'
+                                                          : nombre,
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 15,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  _buildStars(calificacion,
+                                                      size: 16),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                resena.isEmpty
+                                                    ? 'Sin reseña.'
+                                                    : resena,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey[800],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             );
           },
         );
@@ -215,6 +257,51 @@ class ReviewsModal {
   }
 
   // Helpers
+
+  static Widget _buildErrorContent(BuildContext context, String message) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: whiteColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          const Icon(Icons.error_outline, color: Colors.redAccent, size: 42),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 15),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryYellow,
+              foregroundColor: Colors.black,
+            ),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static ImageProvider? _buildAvatar(String? base64Image) {
+    if (base64Image == null || base64Image.isEmpty) return null;
+    try {
+      final cleaned = base64Image.contains(',')
+          ? base64Image.split(',').last
+          : base64Image;
+      final bytes = base64Decode(cleaned);
+      return MemoryImage(bytes);
+    } catch (_) {
+      return null;
+    }
+  }
 
   static String _initials(String name) {
     final parts = name.split(' ');

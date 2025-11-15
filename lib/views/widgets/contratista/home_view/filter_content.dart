@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../services/format_service.dart';
 
 class FilterContent extends StatelessWidget {
   final String selectedFilter;
@@ -52,7 +53,7 @@ class FilterContent extends StatelessWidget {
               filled: true,
               fillColor: Colors.grey[100],
             ),
-            onChanged: (val) => onChangedExperiencia(double.tryParse(val)??0),
+            onChanged: (val) => onChangedExperiencia(FormatService.parseDouble(val)),
           ),
         ],
       );

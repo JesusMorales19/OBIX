@@ -56,15 +56,16 @@ class SearchAndFilterBar extends StatelessWidget {
           // ---------- BOTÓN DESPLEGABLE ----------
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(25),
                 border: Border.all(color: const Color(0xFF1F4E79), width: 1),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: selectedFilter,
+                  isExpanded: true,
                   icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF1F4E79)),
                   items: const <String>['Todas', 'Favoritos'].map((String value) {
                     return DropdownMenuItem<String>(

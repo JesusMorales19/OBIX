@@ -4,6 +4,7 @@ import '../models/contratista_model.dart';
 import '../models/trabajador_model.dart';
 import '../models/trabajo_largo_model.dart';
 import '../models/trabajo_corto_model.dart'; // Added import for TrabajoCortoModel
+import '../models/asignacion_trabajo_model.dart';
 import 'config_service.dart';
 
 class ApiService {
@@ -38,8 +39,8 @@ class ApiService {
       // Construir URL con parámetros query
       final uri = Uri.parse('$urlBase$normalizedEndpoint').replace(queryParameters: params);
       
-      print('🌐 GET URL Completa: $uri');
-      print('📦 Parámetros: $params');
+      print('GET URL Completa: $uri');
+      print('Parámetros: $params');
       
       final response = await http.get(
         uri,
@@ -54,7 +55,7 @@ class ApiService {
         },
       );
 
-      print('📥 GET Respuesta - Status: ${response.statusCode}');
+      print('GET Respuesta - Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -65,7 +66,7 @@ class ApiService {
         };
       }
     } catch (e) {
-      print('❌ Error en _getRequest: $e');
+      print('Error en _getRequest: $e');
       return {
         'success': false,
         'error': 'Error de red: ${e.toString()}',
@@ -87,10 +88,10 @@ class ApiService {
       final normalizedEndpoint = endpoint.startsWith('/') ? endpoint : '/$endpoint';
       final url = Uri.parse('$urlBase$normalizedEndpoint');
       
-      print('🌐 URL Base: $urlBase');
-      print('🌐 Endpoint: $normalizedEndpoint');
-      print('🌐 URL Completa: $url');
-      print('📦 Datos enviados: ${jsonEncode(body)}');
+      print('URL Base: $urlBase');
+      print('Endpoint: $normalizedEndpoint');
+      print('URL Completa: $url');
+      print('Datos enviados: ${jsonEncode(body)}');
       
       final response = isPut 
         ? await http.put(
@@ -120,8 +121,8 @@ class ApiService {
         },
       );
 
-      print('📥 Respuesta recibida - Status: ${response.statusCode}');
-      print('📄 Body: ${response.body}');
+      print('Respuesta recibida - Status: ${response.statusCode}');
+      print('Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         try {
@@ -165,7 +166,7 @@ class ApiService {
         }
       }
     } catch (e) {
-      print('❌ Error de conexión: $e');
+      print('Error de conexión: $e');
       String errorMessage = 'Error de conexión';
       
       if (e.toString().contains('Failed host lookup') || 
@@ -188,6 +189,48 @@ class ApiService {
       return {
         'success': false,
         'error': errorMessage,
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> _deleteRequest(
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      var urlBase = await baseUrl;
+      urlBase = _normalizeBaseUrl(urlBase);
+      final normalizedEndpoint =
+          endpoint.startsWith('/') ? endpoint : '/$endpoint';
+      final url = Uri.parse('$urlBase$normalizedEndpoint');
+
+      final response = await http
+          .delete(
+            url,
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Tiempo de espera agotado'),
+          );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+
+      return {
+        'success': false,
+        'error':
+            'Error ${response.statusCode}: ${response.body.isEmpty ? 'sin respuesta' : response.body}',
+      };
+    } catch (error) {
+      return {
+        'success': false,
+        'error': 'Error eliminando token: $error',
       };
     }
   }
@@ -225,8 +268,8 @@ class ApiService {
       urlBase = _normalizeBaseUrl(urlBase);
       final url = Uri.parse('$urlBase/auth/verify');
       
-      print('🌐 URL Base: $urlBase');
-      print('🌐 Verificando token: $url');
+      print('URL Base: $urlBase');
+      print('Verificando token: $url');
       
       final response = await http.get(
         url,
@@ -242,7 +285,7 @@ class ApiService {
         },
       );
 
-      print('📥 Respuesta verificación - Status: ${response.statusCode}');
+      print('Respuesta verificación - Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -258,7 +301,7 @@ class ApiService {
         };
       }
     } catch (e) {
-      print('❌ Error al verificar token: $e');
+      print('Error al verificar token: $e');
       return {
         'success': false,
         'error': 'Error de conexión: ${e.toString()}',
@@ -273,8 +316,8 @@ class ApiService {
       urlBase = _normalizeBaseUrl(urlBase);
       final url = Uri.parse('$urlBase/categorias');
       
-      print('🌐 URL Base: $urlBase');
-      print('🌐 Obteniendo categorías desde: $url');
+      print('URL Base: $urlBase');
+      print('Obteniendo categorías desde: $url');
       
       final response = await http.get(
         url,
@@ -289,7 +332,7 @@ class ApiService {
         },
       );
 
-      print('📥 Respuesta categorías - Status: ${response.statusCode}');
+      print('Respuesta categorías - Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -305,7 +348,7 @@ class ApiService {
         };
       }
     } catch (e) {
-      print('❌ Error al obtener categorías: $e');
+      print('Error al obtener categorías: $e');
       return {
         'success': false,
         'error': 'Error de conexión: ${e.toString()}',
@@ -313,8 +356,6 @@ class ApiService {
       };
     }
   }
-
-  // ========== FAVORITOS ==========
 
   /// Agregar trabajador a favoritos
   static Future<Map<String, dynamic>> agregarFavorito(
@@ -445,7 +486,222 @@ class ApiService {
     });
   }
 
-  // ========== UBICACIÓN Y GEOLOCALIZACIÓN ==========
+  static Future<Map<String, dynamic>> asignarTrabajo(
+    AsignacionTrabajoModel asignacion,
+  ) async {
+    return await _postRequest('/asignaciones/asignar', asignacion.toJsonForCreate());
+  }
+
+  static Future<Map<String, dynamic>> aplicarASolicitud({
+    required String emailTrabajador,
+    required String tipoTrabajo,
+    required int idTrabajo,
+  }) async {
+    return await _postRequest('/solicitudes/aplicar', {
+      'emailTrabajador': emailTrabajador,
+      'tipoTrabajo': tipoTrabajo,
+      'idTrabajo': idTrabajo,
+    });
+  }
+
+  static Future<Map<String, dynamic>> obtenerSolicitudPendienteTrabajador(
+    String emailTrabajador,
+  ) async {
+    return await _getRequest('/solicitudes/pendiente', {
+      'emailTrabajador': emailTrabajador,
+    });
+  }
+
+  static Future<Map<String, dynamic>> obtenerNumeroSolicitudesActivas(
+    String emailTrabajador,
+  ) async {
+    return await _getRequest('/solicitudes/numero-activas', {
+      'emailTrabajador': emailTrabajador,
+    });
+  }
+
+  static Future<Map<String, dynamic>> obtenerSolicitudesActivasTrabajador(
+    String emailTrabajador,
+  ) async {
+    return await _getRequest('/solicitudes/activas', {
+      'emailTrabajador': emailTrabajador,
+    });
+  }
+
+  static Future<Map<String, dynamic>> obtenerTrabajadoresAsignados({
+    required String emailContratista,
+    required String tipoTrabajo,
+    required int idTrabajo,
+  }) async {
+    return await _getRequest('/asignaciones/trabajadores', {
+      'emailContratista': emailContratista,
+      'tipoTrabajo': tipoTrabajo,
+      'idTrabajo': idTrabajo.toString(),
+    });
+  }
+
+  static Future<Map<String, dynamic>> cancelarAsignacion({
+    required String emailContratista,
+    required String emailTrabajador,
+    bool iniciadoPorTrabajador = false,
+    bool skipDefaultNotification = false,
+  }) async {
+    final body = <String, dynamic>{
+      'emailContratista': emailContratista,
+      'emailTrabajador': emailTrabajador,
+      'iniciadoPorTrabajador': iniciadoPorTrabajador,
+    };
+    if (skipDefaultNotification) {
+      body['skipDefaultNotification'] = true;
+    }
+    return await _postRequest('/asignaciones/cancelar', body);
+  }
+
+  static Future<Map<String, dynamic>> obtenerTrabajoActualTrabajador(
+    String emailTrabajador,
+  ) async {
+    return await _getRequest('/asignaciones/trabajador/actual', {
+      'emailTrabajador': emailTrabajador,
+    });
+  }
+
+  static Future<Map<String, dynamic>> registrarCalificacionTrabajador({
+    required String emailContratista,
+    required String emailTrabajador,
+    required int idAsignacion,
+    required int estrellas,
+    String? resena,
+  }) async {
+    return await _postRequest('/calificaciones/registrar', {
+      'emailContratista': emailContratista,
+      'emailTrabajador': emailTrabajador,
+      'idAsignacion': idAsignacion,
+      'estrellas': estrellas,
+      'resena': resena,
+    });
+  }
+
+  static Future<Map<String, dynamic>> obtenerCalificacionesTrabajador(
+    String emailTrabajador,
+  ) async {
+    return await _getRequest('/calificaciones/trabajador', {
+      'emailTrabajador': emailTrabajador,
+    });
+  }
+
+  static Future<Map<String, dynamic>> obtenerPerfilTrabajador(
+    String emailTrabajador,
+  ) async {
+    return await _getRequest('/trabajadores/perfil', {
+      'email': emailTrabajador,
+    });
+  }
+
+  static Future<Map<String, dynamic>> finalizarTrabajo({
+    required String emailContratista,
+    required String tipoTrabajo,
+    required int idTrabajo,
+    required List<Map<String, dynamic>> calificaciones,
+  }) async {
+    return await _postRequest('/asignaciones/finalizar', {
+      'emailContratista': emailContratista,
+      'tipoTrabajo': tipoTrabajo,
+      'idTrabajo': idTrabajo,
+      'calificaciones': calificaciones,
+    });
+  }
+
+  static Future<Map<String, dynamic>> registrarTokenDispositivo({
+    required String email,
+    required String tipoUsuario,
+    required String token,
+    String? plataforma,
+  }) async {
+    return await _postRequest('/notificaciones/token', {
+      'email': email,
+      'tipoUsuario': tipoUsuario,
+      'token': token,
+      'plataforma': plataforma,
+    });
+  }
+
+  static Future<Map<String, dynamic>> eliminarTokenDispositivo(
+    String token,
+  ) async {
+    return await _deleteRequest('/notificaciones/token', {
+      'token': token,
+    });
+  }
+
+  static Future<Map<String, dynamic>> obtenerNotificaciones({
+    required String email,
+    required String tipoUsuario,
+  }) async {
+    return await _getRequest('/notificaciones', {
+      'email': email,
+      'tipoUsuario': tipoUsuario,
+    });
+  }
+
+  static Future<Map<String, dynamic>> marcarNotificacionesLeidas({
+    required String email,
+    required List<int> ids,
+  }) async {
+    return await _postRequest('/notificaciones/marcar-leidas', {
+      'email': email,
+      'ids': ids,
+    });
+  }
+
+  static Future<Map<String, dynamic>> eliminarNotificaciones({
+    required String email,
+  }) async {
+    return await _deleteRequest('/notificaciones', {
+      'email': email,
+    });
+  }
+
+  static Future<Map<String, dynamic>> notificarInteresContratista({
+    required String emailContratista,
+    required String emailTrabajador,
+    String? nombreContratista,
+    String? nombreTrabajador,
+    String? tipoTrabajo,
+    int? idTrabajo,
+  }) async {
+    final body = <String, dynamic>{
+      'emailContratista': emailContratista,
+      'emailTrabajador': emailTrabajador,
+      if (nombreContratista != null && nombreContratista.isNotEmpty)
+        'nombreContratista': nombreContratista,
+      if (nombreTrabajador != null && nombreTrabajador.isNotEmpty)
+        'nombreTrabajador': nombreTrabajador,
+      if (tipoTrabajo != null && tipoTrabajo.isNotEmpty) 'tipoTrabajo': tipoTrabajo,
+      if (idTrabajo != null) 'idTrabajo': idTrabajo,
+    };
+
+    return await _postRequest('/notificaciones/interes-contratista', body);
+  }
+
+  static Future<Map<String, dynamic>> notificarCancelacionContratista({
+    required String emailContratista,
+    required String emailTrabajador,
+    String? nombreContratista,
+    String? tipoTrabajo,
+    int? idTrabajo,
+  }) async {
+    final body = <String, dynamic>{
+      'emailContratista': emailContratista,
+      'emailTrabajador': emailTrabajador,
+      if (nombreContratista != null && nombreContratista.isNotEmpty)
+        'nombreContratista': nombreContratista,
+      if (tipoTrabajo != null && tipoTrabajo.isNotEmpty) 'tipoTrabajo': tipoTrabajo,
+      if (idTrabajo != null) 'idTrabajo': idTrabajo,
+    };
+
+    return await _postRequest('/notificaciones/cancelacion-contratista', body);
+  }
+
   
   /// Actualiza la ubicación de un contratista
   static Future<Map<String, dynamic>> actualizarUbicacionContratista(
@@ -484,7 +740,7 @@ class ApiService {
       urlBase = _normalizeBaseUrl(urlBase);
       final url = Uri.parse('$urlBase/ubicacion/trabajadores-cercanos?email=$email&radio=$radio');
       
-      print('🌐 Buscando trabajadores cercanos: $url');
+      print('Buscando trabajadores cercanos: $url');
       
       final response = await http.get(
         url,
@@ -528,7 +784,7 @@ class ApiService {
       urlBase = _normalizeBaseUrl(urlBase);
       final url = Uri.parse('$urlBase/ubicacion/contratistas-cercanos?email=$email&radio=$radio');
       
-      print('🌐 Buscando contratistas cercanos: $url');
+      print('Buscando contratistas cercanos: $url');
       
       final response = await http.get(
         url,
@@ -574,7 +830,7 @@ class ApiService {
       urlBase = _normalizeBaseUrl(urlBase);
       final url = Uri.parse('$urlBase/ubicacion/trabajadores-por-categoria?email=$email&categoria=$categoria&radio=$radio');
       
-      print('🌐 Buscando trabajadores de categoría $categoria: $url');
+      print('Buscando trabajadores de categoría $categoria: $url');
       
       final response = await http.get(
         url,
@@ -614,6 +870,250 @@ class ApiService {
     Map<String, dynamic> body,
   ) async {
     return await _postRequest(endpoint, body, isPut: true);
+  }
+
+  // Obtener perfil del contratista
+  static Future<Map<String, dynamic>> obtenerPerfilContratista(
+    String emailContratista,
+  ) async {
+    return await _getRequest('/contratistas/perfil', {
+      'email': emailContratista,
+    });
+  }
+
+  static Future<Map<String, dynamic>> actualizarPerfilContratista({
+    required String emailActual,
+    String? nuevoEmail,
+    String? telefono,
+    String? fotoPerfilBase64,
+    String? passwordActual,
+    String? passwordNueva,
+  }) async {
+    final Map<String, dynamic> payload = {
+      'emailActual': emailActual,
+    };
+
+    if (nuevoEmail != null) payload['nuevoEmail'] = nuevoEmail;
+    if (telefono != null) payload['telefono'] = telefono;
+    if (fotoPerfilBase64 != null) {
+      payload['fotoPerfilBase64'] = fotoPerfilBase64;
+    }
+    if (passwordNueva != null) payload['passwordNueva'] = passwordNueva;
+    if (passwordActual != null) payload['passwordActual'] = passwordActual;
+
+    return await _postRequest(
+      '/contratistas/perfil',
+      payload,
+      isPut: true,
+    );
+  }
+
+  static Future<Map<String, dynamic>> actualizarPerfilTrabajador({
+    required String emailActual,
+    String? nuevoEmail,
+    String? telefono,
+    String? descripcion,
+    String? fotoPerfilBase64,
+    String? passwordActual,
+    String? passwordNueva,
+  }) async {
+    final Map<String, dynamic> payload = {
+      'emailActual': emailActual,
+    };
+
+    if (nuevoEmail != null) payload['nuevoEmail'] = nuevoEmail;
+    if (telefono != null) payload['telefono'] = telefono;
+    if (descripcion != null) payload['descripcion'] = descripcion;
+    if (fotoPerfilBase64 != null) payload['fotoPerfilBase64'] = fotoPerfilBase64;
+    if (passwordNueva != null) payload['passwordNueva'] = passwordNueva;
+    if (passwordActual != null) payload['passwordActual'] = passwordActual;
+
+    return await _postRequest(
+      '/trabajadores/perfil',
+      payload,
+      isPut: true,
+    );
+  }
+
+  // ================================================
+  // MÉTODOS PREMIUM
+  // ================================================
+
+  // Verificar si tiene premium activo
+  static Future<Map<String, dynamic>> verificarPremium(String email) async {
+    return await _getRequest('/premium/verificar', {'email': email});
+  }
+
+  // Activar suscripción premium
+  static Future<Map<String, dynamic>> activarSuscripcion({
+    required String emailContratista,
+    required int idPlan,
+    required bool guardarTarjeta,
+    required bool autoRenovacion,
+    Map<String, dynamic>? metodoPago,
+  }) async {
+    final payload = {
+      'email_contratista': emailContratista,
+      'id_plan': idPlan,
+      'guardar_tarjeta': guardarTarjeta,
+      'auto_renovacion': autoRenovacion,
+    };
+    if (metodoPago != null) {
+      payload['metodo_pago'] = metodoPago;
+    }
+    return await _postRequest('/premium/activar', payload);
+  }
+
+  // Cancelar suscripción premium
+  static Future<Map<String, dynamic>> cancelarSuscripcion({
+    required String emailContratista,
+  }) async {
+    return await _postRequest('/premium/cancelar', {
+      'email_contratista': emailContratista,
+    });
+  }
+
+  // Obtener trabajos para administración
+  static Future<Map<String, dynamic>> obtenerTrabajosAdministracion(String email) async {
+    return await _getRequest('/premium/trabajos', {'email': email});
+  }
+
+  // Registrar presupuesto
+  static Future<Map<String, dynamic>> registrarPresupuesto({
+    required String emailContratista,
+    required int idTrabajoLargo,
+    required double presupuesto,
+    String moneda = 'MXN',
+  }) async {
+    return await _postRequest('/premium/presupuesto', {
+      'email_contratista': emailContratista,
+      'id_trabajo_largo': idTrabajoLargo,
+      'presupuesto': presupuesto,
+      'moneda': moneda,
+    });
+  }
+
+  // Registrar horas laborales
+  static Future<Map<String, dynamic>> registrarHoras({
+    required int idAsignacion,
+    required String emailTrabajador,
+    required String emailContratista,
+    required String fecha,
+    required double horas,
+    double? minutos,
+    String? nota,
+  }) async {
+    final payload = {
+      'id_asignacion': idAsignacion,
+      'email_trabajador': emailTrabajador,
+      'email_contratista': emailContratista,
+      'fecha': fecha,
+      'horas': horas,
+    };
+    if (minutos != null) payload['minutos'] = minutos;
+    if (nota != null) payload['nota'] = nota;
+    return await _postRequest('/premium/horas', payload);
+  }
+
+  // Configurar sueldo de trabajador
+  static Future<Map<String, dynamic>> configurarSueldo({
+    required int idAsignacion,
+    required int idTrabajoLargo,
+    required String emailTrabajador,
+    required String emailContratista,
+    required String tipoPeriodo,
+    required double montoPeriodo,
+    String moneda = 'MXN',
+    double? horasRequeridasPeriodo,
+  }) async {
+    final payload = {
+      'id_asignacion': idAsignacion,
+      'id_trabajo_largo': idTrabajoLargo,
+      'email_trabajador': emailTrabajador,
+      'email_contratista': emailContratista,
+      'tipo_periodo': tipoPeriodo,
+      'monto_periodo': montoPeriodo,
+      'moneda': moneda,
+    };
+    if (horasRequeridasPeriodo != null) {
+      payload['horas_requeridas_periodo'] = horasRequeridasPeriodo;
+    }
+    return await _postRequest('/premium/sueldo', payload);
+  }
+
+  // Obtener trabajadores de un trabajo
+  static Future<Map<String, dynamic>> obtenerTrabajadoresTrabajo({
+    required int idTrabajoLargo,
+    required String emailContratista,
+  }) async {
+    return await _getRequest('/premium/trabajadores', {
+      'id_trabajo_largo': idTrabajoLargo.toString(),
+      'email_contratista': emailContratista,
+    });
+  }
+
+  // Generar nómina
+  static Future<Map<String, dynamic>> generarNomina({
+    required int idTrabajoLargo,
+    required String emailContratista,
+    required String periodoInicio,
+    required String periodoFin,
+  }) async {
+    return await _postRequest('/premium/nomina', {
+      'id_trabajo_largo': idTrabajoLargo,
+      'email_contratista': emailContratista,
+      'periodo_inicio': periodoInicio,
+      'periodo_fin': periodoFin,
+    });
+  }
+
+  // Reiniciar horas de trabajadores después de descargar nómina
+  static Future<Map<String, dynamic>> reiniciarHorasTrabajadores({
+    required int idTrabajoLargo,
+    required String emailContratista,
+    required String periodoInicio,
+    required String periodoFin,
+  }) async {
+    return await _postRequest('/premium/reiniciar-horas', {
+      'id_trabajo_largo': idTrabajoLargo,
+      'email_contratista': emailContratista,
+      'periodo_inicio': periodoInicio,
+      'periodo_fin': periodoFin,
+    });
+  }
+
+  // Registrar gasto extra
+  static Future<Map<String, dynamic>> registrarGastoExtra({
+    required int idTrabajoLargo,
+    required String emailContratista,
+    required String fechaGasto,
+    required double monto,
+    required String descripcion,
+  }) async {
+    return await _postRequest('/premium/gastos-extras', {
+      'id_trabajo_largo': idTrabajoLargo,
+      'email_contratista': emailContratista,
+      'fecha_gasto': fechaGasto,
+      'monto': monto.toString(),
+      'descripcion': descripcion,
+    });
+  }
+
+  // Obtener gastos extras
+  static Future<Map<String, dynamic>> obtenerGastosExtras({
+    required int idTrabajoLargo,
+    required String emailContratista,
+    String? periodoInicio,
+    String? periodoFin,
+  }) async {
+    final params = <String, String>{
+      'id_trabajo_largo': idTrabajoLargo.toString(),
+      'email_contratista': emailContratista,
+    };
+    if (periodoInicio != null) params['periodo_inicio'] = periodoInicio;
+    if (periodoFin != null) params['periodo_fin'] = periodoFin;
+    
+    return await _getRequest('/premium/gastos-extras', params);
   }
 }
 

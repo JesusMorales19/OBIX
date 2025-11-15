@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:integradora/services/location_service.dart';
+import '../custom_notification.dart';
 
 class LocationPickerWidget extends StatefulWidget {
-  final Function(double lat, double lon, String? direccion) onLocationSelected;
+  final Function(double? lat, double? lon, String? direccion) onLocationSelected;
   final double? initialLat;
   final double? initialLon;
 
@@ -50,35 +51,29 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
           _isLoading = false;
         });
 
-        widget.onLocationSelected(_latitud!, _longitud!, _direccion);
+        widget.onLocationSelected(_latitud, _longitud, _direccion);
         
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Ubicación actual obtenida'),
-              backgroundColor: Colors.green,
-            ),
+          CustomNotification.showSuccess(
+            context,
+            '✅ Ubicación actual obtenida',
           );
         }
       } else {
         setState(() => _isLoading = false);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No se pudo obtener la ubicación'),
-              backgroundColor: Colors.red,
-            ),
+          CustomNotification.showError(
+            context,
+            'No se pudo obtener la ubicación',
           );
         }
       }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+        CustomNotification.showError(
+          context,
+          'Error: $e',
         );
       }
     }
@@ -123,10 +118,9 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
               ),
             ),
             onChanged: (value) {
-              _direccion = value;
-              if (_latitud != null && _longitud != null) {
-                widget.onLocationSelected(_latitud!, _longitud!, _direccion);
-              }
+              _direccion = value.trim().isNotEmpty ? value.trim() : null;
+              // Actualizar siempre, incluso si solo hay dirección sin coordenadas
+              widget.onLocationSelected(_latitud, _longitud, _direccion);
             },
           ),
           const SizedBox(height: 15),

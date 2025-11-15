@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'modal_detail_short.dart';
 import 'modal_detail_length.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../custom_notification.dart';
 
 class WorkerCard extends StatelessWidget {
   final String title;
@@ -9,6 +10,7 @@ class WorkerCard extends StatelessWidget {
   final Color statusColor;
   final String ubication;
   final String payout;
+  final String? moneda;
   final bool isLongTerm;
   final int? vacancies;
   final String? contratista;
@@ -22,6 +24,10 @@ class WorkerCard extends StatelessWidget {
   final String? especialidad;
   final double? latitud;
   final double? longitud;
+  final VoidCallback? onApply;
+  final bool canApply;
+  final bool showApplyButton;
+  final bool isApplying;
 
   const WorkerCard({
     super.key,
@@ -30,6 +36,7 @@ class WorkerCard extends StatelessWidget {
     required this.statusColor,
     required this.ubication,
     required this.payout,
+    this.moneda,
     required this.isLongTerm,
     this.vacancies,
     this.contratista,
@@ -43,12 +50,17 @@ class WorkerCard extends StatelessWidget {
     this.especialidad,
     this.latitud,
     this.longitud,
+    this.onApply,
+    this.canApply = true,
+    this.showApplyButton = true,
+    this.isApplying = false,
   });
 
   Future<void> _abrirMapa(BuildContext context) async {
     if (latitud == null || longitud == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay coordenadas disponibles para este trabajo.')),
+      CustomNotification.showError(
+        context,
+        'No hay coordenadas disponibles para este trabajo.',
       );
       return;
     }
@@ -56,8 +68,9 @@ class WorkerCard extends StatelessWidget {
     final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitud,$longitud');
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo abrir Maps.')),
+      CustomNotification.showError(
+        context,
+        'No se pudo abrir Maps.',
       );
     }
   }
@@ -117,7 +130,7 @@ class WorkerCard extends StatelessWidget {
           const SizedBox(height: 6),
           if (payout.isNotEmpty) ...[
             Text(
-              '${payoutLabel ?? 'Frecuencia de trabajo'}: $payout',
+              '${payoutLabel ?? 'Frecuencia de trabajo'}: $payout${moneda != null ? ' $moneda' : ''}',
               style: const TextStyle(
                 color: Color(0xFF1F4E79),
                 fontSize: 14,
@@ -126,13 +139,33 @@ class WorkerCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
           ],
-          if (ubication.isNotEmpty)
+          // Mostrar ubicación: botón de Maps si hay coordenadas, dirección si no hay coordenadas pero hay dirección
+          if (latitud != null && longitud != null) ...[
             const SizedBox(height: 6),
-          TextButton.icon(
-            onPressed: () => _abrirMapa(context),
-            icon: const Icon(Icons.map_outlined),
-            label: const Text('Ver ubicación en Maps'),
-          ),
+            TextButton.icon(
+              onPressed: () => _abrirMapa(context),
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('Ver ubicación en Maps'),
+            ),
+          ] else if (ubication.isNotEmpty && ubication != 'Sin dirección') ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(Icons.location_on, color: Color(0xFF1F4E79), size: 18),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    ubication,
+                    style: const TextStyle(
+                      color: Color(0xFF1F4E79),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -156,7 +189,6 @@ class WorkerCard extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   if (isLongTerm) {
-                    // Mostrar modal de largo plazo con datos reales
                     ModalTrabajoLargo.show(
                       context,
                       titulo: title,
@@ -170,16 +202,15 @@ class WorkerCard extends StatelessWidget {
                       direccion: ubication,
                     );
                   } else {
-                    // Mostrar modal de corto plazo
                     ModalTrabajoCorto.show(
                       context,
                       titulo: title,
                       descripcion: descripcion ?? 'Sin descripción',
                       rangoPrecio: payout,
-                      ubicacion: ubication,
                       fotos: imagenesBase64 ?? const [],
                       disponibilidad: disponibilidad ?? 'No especificada',
                       especialidad: especialidad ?? 'No especificada',
+                      contratistaNombre: contratista,
                     );
                   }
                 },
@@ -199,24 +230,35 @@ class WorkerCard extends StatelessWidget {
                   ),
                 ),
               ),
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1F4E79),
-                  minimumSize: const Size(120, 40),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              if (showApplyButton)
+                ElevatedButton(
+                  onPressed: (canApply && !isApplying) ? onApply : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1F4E79),
+                    minimumSize: const Size(120, 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    disabledBackgroundColor: const Color(0xFF5A6F90),
                   ),
+                  child: isApplying
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Aplicar Ahora',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
-                child: const Text(
-                  'Aplicar Ahora',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
             ],
           ),
         ],

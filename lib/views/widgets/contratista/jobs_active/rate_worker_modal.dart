@@ -1,15 +1,50 @@
 import 'package:flutter/material.dart';
+import '../../../../services/api_service.dart';
+import '../../../../services/api_wrapper.dart';
 import '../../../widgets/custom_notification.dart';
+import '../../common/custom_text_field.dart';
 
-void showCalificarTrabajadorModal(BuildContext context, String nombre) {
+class _CalificarTrabajadorModal extends StatefulWidget {
+  final String nombre;
+  final String emailContratista;
+  final String emailTrabajador;
+  final int idAsignacion;
+  final BuildContext parentContext;
+  final Future<void> Function()? onCompleted;
+
+  const _CalificarTrabajadorModal({
+    required this.nombre,
+    required this.emailContratista,
+    required this.emailTrabajador,
+    required this.idAsignacion,
+    required this.parentContext,
+    this.onCompleted,
+  });
+
+  @override
+  State<_CalificarTrabajadorModal> createState() => _CalificarTrabajadorModalState();
+}
+
+class _CalificarTrabajadorModalState extends State<_CalificarTrabajadorModal> {
   int calificacion = 0;
-  final TextEditingController reviewsController = TextEditingController();
+  bool isSubmitting = false;
+  late final TextEditingController reviewsController;
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      return StatefulBuilder(builder: (context, setState) {
-        return Dialog(
+  @override
+  void initState() {
+    super.initState();
+    reviewsController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    reviewsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
           insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 140),
           backgroundColor: Colors.transparent,
@@ -17,7 +52,7 @@ void showCalificarTrabajadorModal(BuildContext context, String nombre) {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFFF5B400), Color(0xFFE67E22)],
+                colors: [Color.fromARGB(255, 255, 255, 255), Color.fromARGB(255, 255, 255, 255)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -34,18 +69,11 @@ void showCalificarTrabajadorModal(BuildContext context, String nombre) {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  "Califica a $nombre",
+                  "Califica a ${widget.nombre}",
                   style: const TextStyle(
                     fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black26,
-                        blurRadius: 3,
-                        offset: Offset(0, 2),
-                      )
-                    ],
+                    fontWeight: FontWeight.normal,
+                    color: Colors.black
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -61,7 +89,7 @@ void showCalificarTrabajadorModal(BuildContext context, String nombre) {
                       icon: Icon(
                         Icons.star,
                         size: 36,
-                        color: index < calificacion ? Colors.white : Colors.white54,
+                        color: index < calificacion ? Colors.amber : Colors.white54,
                         shadows: const [
                           Shadow(
                             color: Colors.black26,
@@ -74,45 +102,176 @@ void showCalificarTrabajadorModal(BuildContext context, String nombre) {
                   }),
                 ),
                 const SizedBox(height: 15),
-                TextField(
+                CustomTextField(
                   controller: reviewsController,
+                  label: 'Reseña (opcional)',
+                  icon: Icons.rate_review,
+                  hint: 'Escribe una reseña',
                   maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: "Escribe una reseña (opcional)",
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.9),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-                  ),
+                  validator: null, // Opcional, no requiere validación
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    CustomNotification.showSuccess(context, 'Trabajador desvinculado y calificado exitosamente');
-                  },
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          if (calificacion == 0) {
+                            CustomNotification.showError(
+                              widget.parentContext,
+                              'Selecciona una calificación antes de enviar.',
+                            );
+                            return;
+                          }
+
+                          setState(() {
+                            isSubmitting = true;
+                          });
+
+                          final response = await ApiWrapper.safeCallWithResult<Map<String, dynamic>>(
+                            call: () => ApiService.registrarCalificacionTrabajador(
+                              emailContratista: widget.emailContratista,
+                              emailTrabajador: widget.emailTrabajador,
+                              idAsignacion: widget.idAsignacion,
+                              estrellas: calificacion,
+                              resena: reviewsController.text.trim().isEmpty
+                                  ? null
+                                  : reviewsController.text.trim(),
+                            ),
+                            errorMessage: 'Error al registrar la calificación',
+                            showError: false,
+                          );
+
+                          if (response['success'] != true) {
+                            final error = response['error']?.toString() ?? 'No se pudo registrar la calificación.';
+                            if (widget.parentContext.mounted) {
+                              CustomNotification.showError(widget.parentContext, error);
+                            }
+                            if (mounted) {
+                              setState(() {
+                                isSubmitting = false;
+                              });
+                            }
+                            return;
+                          }
+
+                          final apiResponse = response['data'] as Map<String, dynamic>?;
+                          if (apiResponse?['success'] != true) {
+                            final error = apiResponse?['error']?.toString() ?? 'No se pudo registrar la calificación.';
+                            if (widget.parentContext.mounted) {
+                              CustomNotification.showError(widget.parentContext, error);
+                            }
+                            if (mounted) {
+                              setState(() {
+                                isSubmitting = false;
+                              });
+                            }
+                            return;
+                          }
+
+                          final cancelResponse = await ApiWrapper.safeCallWithResult<Map<String, dynamic>>(
+                            call: () => ApiService.cancelarAsignacion(
+                              emailContratista: widget.emailContratista,
+                              emailTrabajador: widget.emailTrabajador,
+                            ),
+                            errorMessage: 'Error al cancelar la asignación',
+                            showError: false,
+                          );
+
+                          if (cancelResponse['success'] != true) {
+                            final error = cancelResponse['error']?.toString() ?? 'No se pudo cancelar la asignación.';
+                            if (widget.parentContext.mounted) {
+                              CustomNotification.showError(widget.parentContext, error);
+                            }
+                            if (mounted) {
+                              setState(() {
+                                isSubmitting = false;
+                              });
+                            }
+                            return;
+                          }
+
+                          final cancelApiResponse = cancelResponse['data'] as Map<String, dynamic>?;
+                          if (cancelApiResponse?['success'] != true) {
+                            final error = cancelApiResponse?['error']?.toString() ?? 'No se pudo cancelar la asignación.';
+                            if (widget.parentContext.mounted) {
+                              CustomNotification.showError(widget.parentContext, error);
+                            }
+                            if (mounted) {
+                              setState(() {
+                                isSubmitting = false;
+                              });
+                            }
+                            return;
+                          }
+
+                          if (widget.onCompleted != null) {
+                            await widget.onCompleted!();
+                          }
+
+                          if (mounted) {
+                            Navigator.pop(context);
+                          }
+                          
+                          if (widget.parentContext.mounted) {
+                            CustomNotification.showSuccess(
+                              widget.parentContext,
+                              'Calificación enviada y trabajador desvinculado correctamente.',
+                            );
+                          }
+                          
+                          if (mounted) {
+                            setState(() {
+                              isSubmitting = false;
+                            });
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 14),
-                    backgroundColor: Colors.white,
+                    backgroundColor: Color(0xFF1F4E79),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                   ),
-                  child: Text(
-                    "Enviar",
-                    style: TextStyle(
-                      color: const Color(0xFFE67E22),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text(
+                          "Enviar",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                 )
               ],
             ),
           ),
         );
-      });
+  }
+}
+
+void showCalificarTrabajadorModal(
+  BuildContext context, {
+  required BuildContext parentContext,
+  required String nombre,
+  required String emailContratista,
+  required String emailTrabajador,
+  required int idAsignacion,
+  Future<void> Function()? onCompleted,
+}) {
+  showDialog(
+    context: context,
+    builder: (dialogContext) {
+      return _CalificarTrabajadorModal(
+        nombre: nombre,
+        emailContratista: emailContratista,
+        emailTrabajador: emailTrabajador,
+        idAsignacion: idAsignacion,
+        parentContext: parentContext,
+        onCompleted: onCompleted,
+      );
     },
   );
 }

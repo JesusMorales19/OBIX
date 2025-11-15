@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class EditDialog {
   /// Muestra un modal moderno para editar un valor
@@ -6,8 +7,11 @@ class EditDialog {
     BuildContext context,
     String title,
     String currentValue,
-    Function(String) onSave,
-  ) {
+    Future<bool> Function(String) onSave, {
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+  }) {
     final TextEditingController controller =
         TextEditingController(text: currentValue);
 
@@ -61,6 +65,9 @@ class EditDialog {
               // Campo de texto
               TextField(
                 controller: controller,
+                keyboardType: keyboardType,
+                inputFormatters: inputFormatters,
+                textCapitalization: textCapitalization,
                 decoration: InputDecoration(
                   hintText: 'Ingrese $title',
                   filled: true,
@@ -103,9 +110,12 @@ class EditDialog {
                       elevation: 6,
                       shadowColor: Colors.blueAccent,
                     ),
-                    onPressed: () {
-                      onSave(controller.text);
-                      Navigator.pop(context);
+                    onPressed: () async {
+                      final nuevoValor = controller.text.trim();
+                      final success = await onSave(nuevoValor);
+                      if (success && context.mounted) {
+                        Navigator.pop(context);
+                      }
                     },
                     child:
                         const Text('Guardar', style: TextStyle(fontSize: 16)),

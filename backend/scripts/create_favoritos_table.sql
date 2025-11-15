@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS favoritos (
   
   -- Foreign keys
   CONSTRAINT fk_contratista FOREIGN KEY (email_contratista) 
-    REFERENCES contratistas(email) ON DELETE CASCADE,
+    REFERENCES contratistas(email) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT fk_trabajador FOREIGN KEY (email_trabajador) 
     REFERENCES trabajadores(email) ON DELETE CASCADE,
   
