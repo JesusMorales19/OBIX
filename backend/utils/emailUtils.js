@@ -38,3 +38,14 @@ export const convertDateFormat = (dateString) => {
 
 
 
+<<<<<<< HEAD
+=======
+
+
+
+
+
+
+
+
+>>>>>>> feature/App-Terminada

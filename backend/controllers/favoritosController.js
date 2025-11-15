@@ -1,4 +1,8 @@
 import { query } from '../config/db.js';
+<<<<<<< HEAD
+=======
+import { handleDatabaseError, handleValidationError } from '../services/errorHandler.js';
+>>>>>>> feature/App-Terminada
 
 /**
  * Agregar un trabajador a favoritos
@@ -8,10 +12,14 @@ export const agregarFavorito = async (req, res) => {
     const { emailContratista, emailTrabajador } = req.body;
 
     if (!emailContratista || !emailTrabajador) {
+<<<<<<< HEAD
       return res.status(400).json({
         success: false,
         error: 'Email del contratista y del trabajador son requeridos',
       });
+=======
+      return handleValidationError(res, 'Email del contratista y del trabajador son requeridos');
+>>>>>>> feature/App-Terminada
     }
 
     // Verificar que el contratista existe
@@ -21,10 +29,14 @@ export const agregarFavorito = async (req, res) => {
     );
 
     if (contratistaResult.rows.length === 0) {
+<<<<<<< HEAD
       return res.status(404).json({
         success: false,
         error: 'Contratista no encontrado',
       });
+=======
+      return handleValidationError(res, 'Contratista no encontrado', 404);
+>>>>>>> feature/App-Terminada
     }
 
     // Verificar que el trabajador existe
@@ -34,10 +46,14 @@ export const agregarFavorito = async (req, res) => {
     );
 
     if (trabajadorResult.rows.length === 0) {
+<<<<<<< HEAD
       return res.status(404).json({
         success: false,
         error: 'Trabajador no encontrado',
       });
+=======
+      return handleValidationError(res, 'Trabajador no encontrado', 404);
+>>>>>>> feature/App-Terminada
     }
 
     // Insertar favorito (si ya existe, no hará nada por el UNIQUE constraint)
@@ -63,12 +79,16 @@ export const agregarFavorito = async (req, res) => {
       data: result.rows[0],
     });
   } catch (error) {
+<<<<<<< HEAD
     console.error('Error al agregar favorito:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor',
       details: error.message,
     });
+=======
+    handleDatabaseError(error, res, 'Error al agregar favorito');
+>>>>>>> feature/App-Terminada
   }
 };
 
@@ -80,10 +100,14 @@ export const quitarFavorito = async (req, res) => {
     const { emailContratista, emailTrabajador } = req.body;
 
     if (!emailContratista || !emailTrabajador) {
+<<<<<<< HEAD
       return res.status(400).json({
         success: false,
         error: 'Email del contratista y del trabajador son requeridos',
       });
+=======
+      return handleValidationError(res, 'Email del contratista y del trabajador son requeridos');
+>>>>>>> feature/App-Terminada
     }
 
     const result = await query(
@@ -94,10 +118,14 @@ export const quitarFavorito = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
+<<<<<<< HEAD
       return res.status(404).json({
         success: false,
         error: 'Favorito no encontrado',
       });
+=======
+      return handleValidationError(res, 'Favorito no encontrado', 404);
+>>>>>>> feature/App-Terminada
     }
 
     res.status(200).json({
@@ -105,12 +133,16 @@ export const quitarFavorito = async (req, res) => {
       message: 'Trabajador quitado de favoritos',
     });
   } catch (error) {
+<<<<<<< HEAD
     console.error('Error al quitar favorito:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor',
       details: error.message,
     });
+=======
+    handleDatabaseError(error, res, 'Error al quitar favorito');
+>>>>>>> feature/App-Terminada
   }
 };
 
@@ -120,6 +152,7 @@ export const quitarFavorito = async (req, res) => {
 export const verificarFavorito = async (req, res) => {
   try {
     const { emailContratista, emailTrabajador } = req.query;
+<<<<<<< HEAD
     console.log('🔍 Verificando favorito:', { emailContratista, emailTrabajador });
 
     if (!emailContratista || !emailTrabajador) {
@@ -127,6 +160,11 @@ export const verificarFavorito = async (req, res) => {
         success: false,
         error: 'Email del contratista y del trabajador son requeridos',
       });
+=======
+
+    if (!emailContratista || !emailTrabajador) {
+      return handleValidationError(res, 'Email del contratista y del trabajador son requeridos');
+>>>>>>> feature/App-Terminada
     }
 
     const result = await query(
@@ -135,19 +173,26 @@ export const verificarFavorito = async (req, res) => {
     );
 
     const esFavorito = result.rows.length > 0;
+<<<<<<< HEAD
     console.log(`✅ Es favorito: ${esFavorito}`);
+=======
+>>>>>>> feature/App-Terminada
 
     res.status(200).json({
       success: true,
       esFavorito: esFavorito,
     });
   } catch (error) {
+<<<<<<< HEAD
     console.error('❌ Error al verificar favorito:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor',
       details: error.message,
     });
+=======
+    handleDatabaseError(error, res, 'Error al verificar favorito');
+>>>>>>> feature/App-Terminada
   }
 };
 
@@ -157,6 +202,7 @@ export const verificarFavorito = async (req, res) => {
 export const listarFavoritos = async (req, res) => {
   try {
     const { emailContratista } = req.query;
+<<<<<<< HEAD
     console.log('📋 Listando favoritos para:', emailContratista);
 
     if (!emailContratista) {
@@ -165,13 +211,31 @@ export const listarFavoritos = async (req, res) => {
         success: false,
         error: 'Email del contratista es requerido',
       });
+=======
+
+    if (!emailContratista) {
+      return handleValidationError(res, 'Email del contratista es requerido');
+>>>>>>> feature/App-Terminada
     }
 
     const result = await query(
       `SELECT 
+<<<<<<< HEAD
         t.nombre, t.apellido, t.username, t.email, t.telefono,
         c.nombre as categoria, t.experiencia,
         t.disponible, t.calificacion_promedio, t.foto_perfil,
+=======
+        t.nombre,
+        t.apellido,
+        t.username,
+        t.email,
+        t.telefono,
+        c.nombre as categoria,
+        t.experiencia,
+        t.disponible,
+        t.calificacion_promedio,
+        t.foto_perfil,
+>>>>>>> feature/App-Terminada
         f.fecha_agregado
        FROM favoritos f
        INNER JOIN trabajadores t ON f.email_trabajador = t.email
@@ -180,8 +244,11 @@ export const listarFavoritos = async (req, res) => {
        ORDER BY f.fecha_agregado DESC`,
       [emailContratista]
     );
+<<<<<<< HEAD
 
     console.log(`✅ Favoritos encontrados: ${result.rows.length}`);
+=======
+>>>>>>> feature/App-Terminada
     
     res.status(200).json({
       success: true,
@@ -189,12 +256,16 @@ export const listarFavoritos = async (req, res) => {
       favoritos: result.rows,
     });
   } catch (error) {
+<<<<<<< HEAD
     console.error('❌ Error al listar favoritos:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor',
       details: error.message,
     });
+=======
+    handleDatabaseError(error, res, 'Error al listar favoritos');
+>>>>>>> feature/App-Terminada
   }
 };
 

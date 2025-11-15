@@ -1,33 +1,142 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../custom_notification.dart';
 import '../../../widgets/trabajador/jobs_employee/end_contract_dialog.dart';
 
 class WorkerCardJobs extends StatelessWidget {
-  final String titulo;
-  final String pagoSemanal;
-  final String frecuenciaPago;
-  final String contratista;
-  final String ubicacion;
-  final String tipoObra;
-  final String ultimoPago;
+  final bool esTrabajoLargo;
+  final String tituloTrabajo;
+  final String nombreContratista;
+  final String? rangoPrecio;
+  final String? especialidad;
+  final String? disponibilidad;
+  final String? frecuenciaPago;
+  final String? tipoObra;
+  final String? fechaFinal;
+  final String? direccion;
+  final double? latitud;
+  final double? longitud;
   final String nombreTrabajador;
-  final String fechaFinal;
-  final String imagenUrl;
-  final bool activo;
+  final String? fotoTrabajadorBase64;
+  final double? calificacionTrabajador;
+  final VoidCallback? onCancelarContrato;
 
   const WorkerCardJobs({
     super.key,
-    required this.titulo,
-    required this.pagoSemanal,
-    required this.frecuenciaPago,
-    required this.contratista,
-    required this.ubicacion,
-    required this.tipoObra,
-    required this.ultimoPago,
+    required this.esTrabajoLargo,
+    required this.tituloTrabajo,
+    required this.nombreContratista,
     required this.nombreTrabajador,
-    required this.fechaFinal,
-    required this.imagenUrl,
-    this.activo = true,
+    this.rangoPrecio,
+    this.especialidad,
+    this.disponibilidad,
+    this.frecuenciaPago,
+    this.tipoObra,
+    this.fechaFinal,
+    this.direccion,
+    this.latitud,
+    this.longitud,
+    this.fotoTrabajadorBase64,
+    this.calificacionTrabajador,
+    this.onCancelarContrato,
   });
+
+  ImageProvider _obtenerImagen() {
+    if (fotoTrabajadorBase64 != null && fotoTrabajadorBase64!.isNotEmpty) {
+      try {
+        final bytes = base64Decode(fotoTrabajadorBase64!);
+        return MemoryImage(bytes);
+      } catch (_) {
+        // ignorar y usar imagen por defecto
+      }
+    }
+    return const AssetImage('assets/images/albañil.png');
+  }
+
+  String _calificacionTexto() {
+    final rating = calificacionTrabajador;
+    if (rating == null) return 'Sin calificación';
+    return '${rating.toStringAsFixed(1)}/5.0';
+  }
+
+  List<Widget> _buildStars() {
+    final rating = calificacionTrabajador ?? 0;
+    final estrellasLlenas = rating.floor();
+    final tieneMedia = (rating - estrellasLlenas) >= 0.5;
+    return List.generate(5, (index) {
+      if (index < estrellasLlenas) {
+        return const Icon(Icons.star, size: 16, color: Colors.amber);
+      } else if (index == estrellasLlenas && tieneMedia) {
+        return const Icon(Icons.star_half, size: 16, color: Colors.amber);
+      }
+      return const Icon(Icons.star_border, size: 16, color: Colors.amber);
+    });
+  }
+
+  Future<void> _abrirMapa(BuildContext context) async {
+    if (latitud == null || longitud == null) {
+      CustomNotification.showError(
+        context,
+        'No hay coordenadas disponibles para este trabajo.',
+      );
+      return;
+    }
+    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitud,$longitud');
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      CustomNotification.showError(
+        context,
+        'No se pudo abrir la ubicación en Maps.',
+      );
+    }
+  }
+
+  List<Widget> _buildDetalleTrabajo() {
+    final List<Widget> items = [];
+
+    items.add(_infoRow('Nombre del trabajo:', tituloTrabajo));
+    items.add(const Divider(color: Colors.black26, height: 2));
+
+    items.add(_infoRow('Contratista:', nombreContratista));
+    items.add(const Divider(color: Colors.black26, height: 2));
+
+    if (esTrabajoLargo) {
+      if (frecuenciaPago != null && frecuenciaPago!.isNotEmpty) {
+        items.add(_infoRow('Frecuencia de pago:', frecuenciaPago!));
+        items.add(const Divider(color: Colors.black26, height: 2));
+      }
+      if (tipoObra != null && tipoObra!.isNotEmpty) {
+        items.add(_infoRow('Tipo de obra:', tipoObra!));
+        items.add(const Divider(color: Colors.black26, height: 2));
+      }
+      if (fechaFinal != null && fechaFinal!.isNotEmpty) {
+        items.add(_infoRow('Fecha final:', fechaFinal!));
+        items.add(const Divider(color: Colors.black26, height: 2));
+      }
+    } else {
+      if (rangoPrecio != null && rangoPrecio!.isNotEmpty) {
+        items.add(_infoRow('Rango de precio:', rangoPrecio!));
+        items.add(const Divider(color: Colors.black26, height: 2));
+      }
+      if (especialidad != null && especialidad!.isNotEmpty) {
+        items.add(_infoRow('Especialidad:', especialidad!));
+        items.add(const Divider(color: Colors.black26, height: 2));
+      }
+      if (disponibilidad != null && disponibilidad!.isNotEmpty) {
+        items.add(_infoRow('Disponibilidad:', disponibilidad!));
+        items.add(const Divider(color: Colors.black26, height: 2));
+      }
+    }
+
+    if (direccion != null && direccion!.isNotEmpty) {
+      items.add(_infoRow('Dirección:', direccion!));
+      items.add(const Divider(color: Colors.black26, height: 2));
+    }
+
+    return items;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,30 +157,17 @@ class WorkerCardJobs extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Estado en esquina superior derecha
-          Align(
-            alignment: Alignment.topRight,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: activo ? Colors.green : Colors.red,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                activo ? "Activo" : "Finalizado",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+          Text(
+            esTrabajoLargo ? 'Trabajo de largo plazo' : 'Trabajo de corto plazo',
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.green,
+              fontWeight: FontWeight.w600,
             ),
           ),
-
-          const SizedBox(height: 8),
-          // Título
+          const SizedBox(height: 6),
           Text(
-            titulo,
+            tituloTrabajo,
             style: const TextStyle(
               fontSize: 19,
               fontWeight: FontWeight.bold,
@@ -80,41 +176,46 @@ class WorkerCardJobs extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Contenido principal
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Columna izquierda
               Expanded(
                 flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 10),
-                    _infoRow("Pago semanal:", pagoSemanal),
-                    const Divider(color: Colors.black26, height: 2),
-                    const SizedBox(height: 10),
-                    _infoRow("Frecuencia de pago:", frecuenciaPago),
-                    const Divider(color: Colors.black26, height: 2),
-                    const SizedBox(height: 10),
-                    _infoRow("Contratista:", contratista),
-                    const Divider(color: Colors.black26, height: 2),
-                    const SizedBox(height: 10),
-                    _infoRow("Ubicación:", ubicacion),
-                    const Divider(color: Colors.black26, height: 2),
-                    const SizedBox(height: 10),
-                    _infoRow("Tipo de Obra:", tipoObra),
-                    const Divider(color: Colors.black26, height: 2),
-                    const SizedBox(height: 10),
-                    _infoRow("Último pago:", ultimoPago),
-                    const Divider(color: Colors.black26, height: 2),
+                    ..._buildDetalleTrabajo(),
+                    const SizedBox(height: 12),
+                    // Mostrar ubicación: botón de Maps si hay coordenadas, dirección si no hay coordenadas pero hay dirección
+                    if (latitud != null && longitud != null)
+                      ElevatedButton.icon(
+                        onPressed: () => _abrirMapa(context),
+                        icon: const Icon(Icons.map_outlined),
+                        label: const Text('Ver ubicación'),
+                      )
+                    else if (direccion != null && direccion!.isNotEmpty)
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on, color: Color(0xFF1F4E79), size: 18),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              direccion!,
+                              style: const TextStyle(
+                                color: Color(0xFF1F4E79),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
 
               const SizedBox(width: 20),
 
-              // Columna derecha
               Expanded(
                 flex: 1,
                 child: Column(
@@ -135,7 +236,7 @@ class WorkerCardJobs extends StatelessWidget {
                         ),
                         child: CircleAvatar(
                           radius: 50,
-                          backgroundImage: AssetImage(imagenUrl),
+                          backgroundImage: _obtenerImagen(),
                         ),
                       ),
                     ),
@@ -150,10 +251,10 @@ class WorkerCardJobs extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      "5.0/5.0",
+                    Text(
+                      _calificacionTexto(),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                         color: Colors.black87,
@@ -162,24 +263,7 @@ class WorkerCardJobs extends StatelessWidget {
                     const SizedBox(height: 3),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        5,
-                        (index) => const Icon(
-                          Icons.star,
-                          size: 16,
-                          color: Colors.amber,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Fecha final: $fechaFinal",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF555555),
-                        fontWeight: FontWeight.w600,
-                      ),
+                      children: _buildStars(),
                     ),
                   ],
                 ),
@@ -194,12 +278,7 @@ class WorkerCardJobs extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {
                 EndContractDialog.show(context, () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Contrato finalizado correctamente"),
-                      backgroundColor: Colors.redAccent,
-                    ),
-                  );
+                  onCancelarContrato?.call();
                 });
               },
               style: ElevatedButton.styleFrom(

@@ -5,6 +5,7 @@ import '../screens/trabajador/home_view.dart';
 import '../screens/trabajador/jobs_employee.dart';
 import '../screens/contratista/jobs_active.dart';
 import '../screens/trabajador/profile_view.dart';
+import '../screens/contratista/premium_admin_view.dart';
 
 
 class CustomBottomNav extends StatefulWidget {
@@ -50,6 +51,9 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
           nextPage = const JobsActive();
           break;
         case 2:
+          nextPage = const PremiumAdminView();
+          break;
+        case 3:
           nextPage = const ProfileView();
           break;
           default:
@@ -76,20 +80,40 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
         selectedItemColor: const Color(0xFFE67E22),
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work_outline),
-            label: 'Trabajos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Perfil',
-          ),
-        ],
+        type: widget.role == 'contratista' ? BottomNavigationBarType.fixed : BottomNavigationBarType.fixed,
+        items: widget.role == 'contratista'
+            ? const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.work_outline),
+                  label: 'Trabajos',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.admin_panel_settings_outlined),
+                  label: 'Administrar',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  label: 'Perfil',
+                ),
+              ]
+            : const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.work_outline),
+                  label: 'Trabajos',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  label: 'Perfil',
+                ),
+              ],
       ),
     );
   }

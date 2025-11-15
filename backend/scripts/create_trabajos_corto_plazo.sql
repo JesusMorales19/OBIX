@@ -17,7 +17,11 @@ CREATE TABLE IF NOT EXISTS trabajos_corto_plazo (
   especialidad VARCHAR(100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_tc_contratista FOREIGN KEY (email_contratista)
+<<<<<<< HEAD
     REFERENCES contratistas(email) ON DELETE CASCADE,
+=======
+    REFERENCES contratistas(email) ON DELETE CASCADE ON UPDATE CASCADE,
+>>>>>>> feature/App-Terminada
   CONSTRAINT ck_tc_estado CHECK (estado IN ('activo', 'pausado', 'completado', 'cancelado')),
   CONSTRAINT ck_tc_vacantes CHECK (vacantes_disponibles >= 0)
 );

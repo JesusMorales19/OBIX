@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:integradora/services/location_service.dart';
+<<<<<<< HEAD
 
 class LocationPickerWidget extends StatefulWidget {
   final Function(double lat, double lon, String? direccion) onLocationSelected;
+=======
+import '../custom_notification.dart';
+
+class LocationPickerWidget extends StatefulWidget {
+  final Function(double? lat, double? lon, String? direccion) onLocationSelected;
+>>>>>>> feature/App-Terminada
   final double? initialLat;
   final double? initialLon;
 
@@ -50,6 +57,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
           _isLoading = false;
         });
 
+<<<<<<< HEAD
         widget.onLocationSelected(_latitud!, _longitud!, _direccion);
         
         if (mounted) {
@@ -58,27 +66,47 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
               content: Text('✅ Ubicación actual obtenida'),
               backgroundColor: Colors.green,
             ),
+=======
+        widget.onLocationSelected(_latitud, _longitud, _direccion);
+        
+        if (mounted) {
+          CustomNotification.showSuccess(
+            context,
+            '✅ Ubicación actual obtenida',
+>>>>>>> feature/App-Terminada
           );
         }
       } else {
         setState(() => _isLoading = false);
         if (mounted) {
+<<<<<<< HEAD
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('No se pudo obtener la ubicación'),
               backgroundColor: Colors.red,
             ),
+=======
+          CustomNotification.showError(
+            context,
+            'No se pudo obtener la ubicación',
+>>>>>>> feature/App-Terminada
           );
         }
       }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
+<<<<<<< HEAD
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
             backgroundColor: Colors.red,
           ),
+=======
+        CustomNotification.showError(
+          context,
+          'Error: $e',
+>>>>>>> feature/App-Terminada
         );
       }
     }
@@ -123,10 +151,16 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
               ),
             ),
             onChanged: (value) {
+<<<<<<< HEAD
               _direccion = value;
               if (_latitud != null && _longitud != null) {
                 widget.onLocationSelected(_latitud!, _longitud!, _direccion);
               }
+=======
+              _direccion = value.trim().isNotEmpty ? value.trim() : null;
+              // Actualizar siempre, incluso si solo hay dirección sin coordenadas
+              widget.onLocationSelected(_latitud, _longitud, _direccion);
+>>>>>>> feature/App-Terminada
             },
           ),
           const SizedBox(height: 15),

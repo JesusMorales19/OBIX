@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:integradora/views/widgets/contratista/jobs_active/modals_helper.dart';
 import 'package:integradora/views/widgets/contratista/jobs_active/show_modal_employees.dart';
 import 'package:url_launcher/url_launcher.dart';
+=======
+import 'package:url_launcher/url_launcher.dart';
+import '../../custom_notification.dart';
+>>>>>>> feature/App-Terminada
 
 //
 // 🔹 CARD LARGO PLAZO
@@ -10,24 +15,44 @@ class JobCardLargo extends StatelessWidget {
   final String title;
   final String frecuenciaPago;
   final String vacantesDisponibles;
+<<<<<<< HEAD
+=======
+  final int vacantesDisponiblesInt;
+>>>>>>> feature/App-Terminada
   final String tipoObra;
   final String fechaInicio;
   final String fechaFinal;
   final double? latitud;
   final double? longitud;
   final String? direccion;
+<<<<<<< HEAD
+=======
+  final String estado;
+  final VoidCallback? onVerTrabajadores;
+  final VoidCallback? onTerminar;
+>>>>>>> feature/App-Terminada
 
   const JobCardLargo({
     super.key,
     required this.title,
     required this.frecuenciaPago,
     required this.vacantesDisponibles,
+<<<<<<< HEAD
+=======
+    required this.vacantesDisponiblesInt,
+>>>>>>> feature/App-Terminada
     required this.tipoObra,
     required this.fechaInicio,
     required this.fechaFinal,
     this.latitud,
     this.longitud,
     this.direccion,
+<<<<<<< HEAD
+=======
+    required this.estado,
+    this.onVerTrabajadores,
+    this.onTerminar,
+>>>>>>> feature/App-Terminada
   });
 
   Future<void> _abrirMapa(BuildContext context) async {
@@ -49,6 +74,9 @@ class JobCardLargo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final badgeText = _resolveBadgeText(estado, vacantesDisponiblesInt);
+    final badgeColor = _resolveBadgeColor(estado, vacantesDisponiblesInt);
+
     return _buildBaseCard(
       context: context,
       title: title,
@@ -66,6 +94,10 @@ class JobCardLargo extends StatelessWidget {
           ),
         ],
       ),
+      onVerTrabajadores: onVerTrabajadores,
+      onTerminar: onTerminar,
+      badgeText: badgeText,
+      badgeColor: badgeColor,
     );
   }
 }
@@ -82,6 +114,13 @@ class JobCardCorto extends StatelessWidget {
   final double? longitud;
   final String vacantesDisponibles;
   final String? fechaCreacion;
+<<<<<<< HEAD
+=======
+  final int vacantesDisponiblesInt;
+  final String estado;
+  final VoidCallback? onVerTrabajadores;
+  final VoidCallback? onTerminar;
+>>>>>>> feature/App-Terminada
 
   const JobCardCorto({
     super.key,
@@ -93,6 +132,13 @@ class JobCardCorto extends StatelessWidget {
     this.longitud,
     required this.vacantesDisponibles,
     this.fechaCreacion,
+<<<<<<< HEAD
+=======
+    required this.vacantesDisponiblesInt,
+    required this.estado,
+    this.onVerTrabajadores,
+    this.onTerminar,
+>>>>>>> feature/App-Terminada
   });
 
   Future<void> _abrirMapa(BuildContext context) async {
@@ -114,6 +160,9 @@ class JobCardCorto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final badgeText = _resolveBadgeText(estado, vacantesDisponiblesInt);
+    final badgeColor = _resolveBadgeColor(estado, vacantesDisponiblesInt);
+
     return _buildBaseCard(
       context: context,
       title: title,
@@ -124,14 +173,21 @@ class JobCardCorto extends StatelessWidget {
           _dividerLine(),
           _infoRow('Especialidad Requerida:', especialidad,
               'Trabajo creado:', fechaCreacion ?? 'No especificada'),
+<<<<<<< HEAD
           const SizedBox(height: 10),
           TextButton.icon(
             onPressed: () => _abrirMapa(context),
             icon: const Icon(Icons.map_outlined),
             label: const Text('Ver ubicación en Maps'),
           ),
+=======
+>>>>>>> feature/App-Terminada
         ],
       ),
+      onVerTrabajadores: onVerTrabajadores,
+      onTerminar: onTerminar,
+      badgeText: badgeText,
+      badgeColor: badgeColor,
     );
   }
 }
@@ -143,8 +199,12 @@ Widget _buildBaseCard({
   required BuildContext context,
   required String title,
   required Widget content,
+  required VoidCallback? onVerTrabajadores,
+  required VoidCallback? onTerminar,
+  required String badgeText,
+  required Color badgeColor,
 }) {
- return Container(
+  return Container(
     margin: const EdgeInsets.only(bottom: 25),
     padding: const EdgeInsets.fromLTRB(15, 20, 15, 20),
     decoration: BoxDecoration(
@@ -190,11 +250,10 @@ Widget _buildBaseCard({
                     width: 150,
                     height: 30,
                     child: ElevatedButton(
-                      onPressed: () {
-                        showModalTrabajadores(context);
-                      },
+                      onPressed: onVerTrabajadores,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF00AE0C),
+                        disabledBackgroundColor: Colors.grey.shade400,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -215,11 +274,10 @@ Widget _buildBaseCard({
                     width: 150,
                     height: 30,
                     child: ElevatedButton(
-                      onPressed: () {
-                        showEndJobFlow(context, ['Carlos Pérez', 'Luis García']);
-                      },
+                      onPressed: onTerminar,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey.shade300,
+                        disabledBackgroundColor: Colors.grey.shade400,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -249,12 +307,12 @@ Widget _buildBaseCard({
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
             decoration: BoxDecoration(
-              color: const Color(0xFF00AE0C),
+              color: badgeColor,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Text(
-              'Activo',
-              style: TextStyle(
+            child: Text(
+              badgeText,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -326,4 +384,30 @@ Widget _infoRow(String label1, String value1, String label2, String value2) {
       ),
     ],
   );
+}
+
+String _resolveBadgeText(String estado, int vacantes) {
+  if (estado == 'cancelado') {
+    return 'Cancelado';
+  }
+  if (estado == 'completado') {
+    return 'Completado';
+  }
+  if (estado == 'pausado' || vacantes <= 0) {
+    return 'En proceso';
+  }
+  return 'Activo';
+}
+
+Color _resolveBadgeColor(String estado, int vacantes) {
+  if (estado == 'cancelado') {
+    return const Color(0xFFE53935);
+  }
+  if (estado == 'completado') {
+    return const Color(0xFF546E7A);
+  }
+  if (estado == 'pausado' || vacantes <= 0) {
+    return const Color(0xFFF57C00);
+  }
+  return const Color(0xFF00AE0C);
 }

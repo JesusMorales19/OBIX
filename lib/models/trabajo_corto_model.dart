@@ -1,11 +1,22 @@
+<<<<<<< HEAD
+=======
+import '../services/format_service.dart';
+
+>>>>>>> feature/App-Terminada
 class TrabajoCortoModel {
   final int? idTrabajoCorto;
   final String emailContratista;
   final String titulo;
   final String descripcion;
   final String rangoPago;
+<<<<<<< HEAD
   final double latitud;
   final double longitud;
+=======
+  final String? moneda;
+  final double? latitud;
+  final double? longitud;
+>>>>>>> feature/App-Terminada
   final String? direccion;
   final String? disponibilidad;
   final String? especialidad;
@@ -24,8 +35,14 @@ class TrabajoCortoModel {
     required this.titulo,
     required this.descripcion,
     required this.rangoPago,
+<<<<<<< HEAD
     required this.latitud,
     required this.longitud,
+=======
+    this.moneda = 'MXN',
+    this.latitud,
+    this.longitud,
+>>>>>>> feature/App-Terminada
     this.direccion,
     this.disponibilidad,
     this.especialidad,
@@ -57,14 +74,24 @@ class TrabajoCortoModel {
       titulo: json['titulo'] ?? '',
       descripcion: json['descripcion'] ?? '',
       rangoPago: json['rango_pago'] ?? json['rangoPago'] ?? '',
+<<<<<<< HEAD
       latitud: _parseDouble(json['latitud']),
       longitud: _parseDouble(json['longitud']),
+=======
+      moneda: json['moneda'] ?? 'MXN',
+      latitud: FormatService.parseDoubleNullable(json['latitud']),
+      longitud: FormatService.parseDoubleNullable(json['longitud']),
+>>>>>>> feature/App-Terminada
       direccion: json['direccion'],
       disponibilidad: json['disponibilidad'],
       especialidad: json['especialidad'],
       estado: json['estado'] ?? 'activo',
+<<<<<<< HEAD
       vacantesDisponibles:
           int.tryParse((json['vacantes_disponibles'] ?? json['vacantesDisponibles'] ?? '0').toString()) ?? 0,
+=======
+      vacantesDisponibles: FormatService.parseInt(json['vacantes_disponibles'] ?? json['vacantesDisponibles'] ?? '0'),
+>>>>>>> feature/App-Terminada
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
@@ -84,6 +111,10 @@ class TrabajoCortoModel {
       'titulo': titulo,
       'descripcion': descripcion,
       'rangoPago': rangoPago,
+<<<<<<< HEAD
+=======
+      'moneda': moneda ?? 'MXN',
+>>>>>>> feature/App-Terminada
       'latitud': latitud,
       'longitud': longitud,
       'direccion': direccion,
@@ -100,6 +131,10 @@ class TrabajoCortoModel {
     String? titulo,
     String? descripcion,
     String? rangoPago,
+<<<<<<< HEAD
+=======
+    String? moneda,
+>>>>>>> feature/App-Terminada
     double? latitud,
     double? longitud,
     String? direccion,
@@ -120,6 +155,10 @@ class TrabajoCortoModel {
       titulo: titulo ?? this.titulo,
       descripcion: descripcion ?? this.descripcion,
       rangoPago: rangoPago ?? this.rangoPago,
+<<<<<<< HEAD
+=======
+      moneda: moneda ?? this.moneda,
+>>>>>>> feature/App-Terminada
       latitud: latitud ?? this.latitud,
       longitud: longitud ?? this.longitud,
       direccion: direccion ?? this.direccion,
@@ -136,11 +175,14 @@ class TrabajoCortoModel {
     );
   }
 
+<<<<<<< HEAD
   static double _parseDouble(dynamic value) {
     if (value == null) return 0.0;
     if (value is double) return value;
     if (value is int) return value.toDouble();
     return double.tryParse(value.toString()) ?? 0.0;
   }
+=======
+>>>>>>> feature/App-Terminada
 }
 

@@ -20,8 +20,15 @@ const pool = new Pool({
 
 // Manejo de errores en el pool
 pool.on('error', (err, client) => {
+<<<<<<< HEAD
   console.error('Error inesperado en el cliente inactivo', err);
   process.exit(-1);
+=======
+  console.error('❌ Error inesperado en el cliente inactivo:', err);
+  console.error('Stack:', err.stack);
+  // No cerrar el proceso, solo registrar el error
+  // El pool se encargará de reconectar automáticamente
+>>>>>>> feature/App-Terminada
 });
 
 // Función para probar la conexión
@@ -45,10 +52,21 @@ export const query = async (text, params) => {
   try {
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
+<<<<<<< HEAD
     console.log('Consulta ejecutada', { text, duration, rows: res.rowCount });
     return res;
   } catch (error) {
     console.error('Error en la consulta:', error);
+=======
+    // Solo loggear consultas lentas (> 1 segundo) o en modo desarrollo
+    if (duration > 1000 || process.env.NODE_ENV === 'development') {
+      console.log('⏱️ Consulta ejecutada', { duration: `${duration}ms`, rows: res.rowCount });
+    }
+    return res;
+  } catch (error) {
+    console.error('❌ Error en la consulta:', error.message);
+    console.error('Query:', text.substring(0, 100) + '...');
+>>>>>>> feature/App-Terminada
     throw error;
   }
 };

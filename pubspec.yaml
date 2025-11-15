@@ -42,11 +42,22 @@ dependencies:
   geolocator: ^13.0.1
   http: ^1.2.0
   shared_preferences: ^2.2.2
+<<<<<<< HEAD
   firebase_core: ^3.0.0
   firebase_messaging: ^15.0.0
   firebase_database: ^11.0.0
   intl: ^0.20.2
   url_launcher: ^6.2.6
+=======
+  flutter_secure_storage: ^9.0.0
+  intl: ^0.20.2
+  url_launcher: ^6.2.6
+  firebase_core: ^2.24.2
+  firebase_messaging: ^14.7.10
+  path_provider: ^2.1.1
+  flutter_local_notifications: ^17.2.2
+  share_plus: ^10.1.2
+>>>>>>> feature/App-Terminada
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +69,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -78,6 +91,8 @@ flutter:
     - assets/images/albañil.png
     - assets/images/electrisista.png
     - assets/images/carpintera.png
+    - assets/images/Logo_Obix_blanco.png
+    - assets/images/logo_obix.png
 
 
   # To add assets to your application, add an assets section, like this:
@@ -110,3 +125,14 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/images/logo_obix.png
+
+flutter_native_splash:
+  color: "#E67E22"
+  image: assets/images/logo_obix.png
+  android_12:
+    color: "#E67E22"
+    icon_background_color: "#E67E22"

@@ -162,3 +162,14 @@ categoria (FK), experiencia, disponible, calificacion_promedio, created_at
 
 
 
+<<<<<<< HEAD
+=======
+
+
+
+
+
+
+
+
+>>>>>>> feature/App-Terminada

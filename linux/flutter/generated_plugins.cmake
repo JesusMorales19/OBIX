@@ -4,6 +4,10 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
+<<<<<<< HEAD
+=======
+  flutter_secure_storage_linux
+>>>>>>> feature/App-Terminada
   url_launcher_linux
 )
 

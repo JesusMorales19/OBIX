@@ -12,6 +12,11 @@ import '../../widgets/custom_notification.dart';
 import '../../../services/api_service.dart';
 import '../../../services/storage_service.dart';
 import '../../../services/location_service.dart';
+<<<<<<< HEAD
+=======
+import '../../../services/notification_service.dart';
+import '../../../services/validation_service.dart';
+>>>>>>> feature/App-Terminada
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -44,6 +49,7 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
+<<<<<<< HEAD
   bool _isValidPassword(String password) {
     // Debe tener más de 8 caracteres, al menos una mayúscula, una minúscula y un número
     if (password.length < 8) return false;
@@ -67,6 +73,10 @@ class _LoginViewState extends State<LoginView> {
     } else {
       setState(() => _passwordError = null);
     }
+=======
+  void _validatePassword(String password) {
+    setState(() => _passwordError = ValidationService.getPasswordError(password));
+>>>>>>> feature/App-Terminada
   }
 
   bool get _isFormValid {
@@ -74,7 +84,11 @@ class _LoginViewState extends State<LoginView> {
         _passwordError == null &&
         _emailOrUsernameController.text.trim().isNotEmpty &&
         _passwordController.text.isNotEmpty &&
+<<<<<<< HEAD
         _isValidPassword(_passwordController.text);
+=======
+        ValidationService.isValidPassword(_passwordController.text);
+>>>>>>> feature/App-Terminada
   }
 
   // ---------- FUNCIÓN LOGIN ----------
@@ -120,6 +134,18 @@ class _LoginViewState extends State<LoginView> {
         await StorageService.saveToken(token);
         await StorageService.saveUser(user);
 
+<<<<<<< HEAD
+=======
+        final emailUsuario = user['email'] as String?;
+        final tipoUsuario = user['tipoUsuario'] as String?;
+        if (emailUsuario != null && tipoUsuario != null) {
+          await NotificationService.instance.configureForUser(
+            email: emailUsuario,
+            tipoUsuario: tipoUsuario,
+          );
+        }
+
+>>>>>>> feature/App-Terminada
         // Solicitar permiso de ubicación y guardar coordenadas
         if (context.mounted) {
           await _solicitarYGuardarUbicacion(user);

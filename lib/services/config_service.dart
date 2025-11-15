@@ -4,7 +4,11 @@ class ConfigService {
   static const String _baseUrlKey = 'server_base_url';
   
   // URL por defecto del servidor
+<<<<<<< HEAD
   static const String defaultUrl = 'http://192.168.0.102:3000/api';
+=======
+  static const String defaultUrl = 'http://192.168.0.106:3000/api';
+>>>>>>> feature/App-Terminada
 
   /// Obtiene la URL base del servidor
   static Future<String> getBaseUrl() async {

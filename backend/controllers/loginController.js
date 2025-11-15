@@ -1,6 +1,10 @@
 import { query } from '../config/db.js';
 import { comparePassword } from '../utils/passwordUtils.js';
 import jwt from 'jsonwebtoken';
+<<<<<<< HEAD
+=======
+import { handleDatabaseError, handleValidationError, handleError } from '../services/errorHandler.js';
+>>>>>>> feature/App-Terminada
 
 /**
  * Inicia sesión de un contratista o trabajador
@@ -13,10 +17,14 @@ export const login = async (req, res) => {
 
     // Validar campos requeridos
     if (!emailOrUsername || !password) {
+<<<<<<< HEAD
       return res.status(400).json({
         success: false,
         error: 'Email/username y contraseña son requeridos',
       });
+=======
+      return handleValidationError(res, 'Email/username y contraseña son requeridos');
+>>>>>>> feature/App-Terminada
     }
 
     let user = null;
@@ -50,20 +58,28 @@ export const login = async (req, res) => {
 
     // Verificar si el usuario existe
     if (!user) {
+<<<<<<< HEAD
       return res.status(401).json({
         success: false,
         error: 'Credenciales inválidas',
       });
+=======
+      return handleValidationError(res, 'Credenciales inválidas', 401);
+>>>>>>> feature/App-Terminada
     }
 
     // Verificar contraseña
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
+<<<<<<< HEAD
       return res.status(401).json({
         success: false,
         error: 'Credenciales inválidas',
       });
+=======
+      return handleValidationError(res, 'Credenciales inválidas', 401);
+>>>>>>> feature/App-Terminada
     }
 
     // Generar JWT token (usando email como identificador único ya que no hay id)
@@ -95,12 +111,16 @@ export const login = async (req, res) => {
       user: userData,
     });
   } catch (error) {
+<<<<<<< HEAD
     console.error('Error al hacer login:', error);
     res.status(500).json({
       success: false,
       error: 'Error interno del servidor',
       details: error.message,
     });
+=======
+    handleError(error, res, 'Error al hacer login');
+>>>>>>> feature/App-Terminada
   }
 };
 
@@ -112,10 +132,14 @@ export const verifyToken = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1]; // Bearer token
 
     if (!token) {
+<<<<<<< HEAD
       return res.status(401).json({
         success: false,
         error: 'Token no proporcionado',
       });
+=======
+      return handleValidationError(res, 'Token no proporcionado', 401);
+>>>>>>> feature/App-Terminada
     }
 
     const decoded = jwt.verify(
@@ -129,6 +153,7 @@ export const verifyToken = async (req, res) => {
     });
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
+<<<<<<< HEAD
       return res.status(401).json({
         success: false,
         error: 'Token expirado',
@@ -139,6 +164,12 @@ export const verifyToken = async (req, res) => {
       success: false,
       error: 'Token inválido',
     });
+=======
+      return handleValidationError(res, 'Token expirado', 401);
+    }
+
+    handleValidationError(res, 'Token inválido', 401);
+>>>>>>> feature/App-Terminada
   }
 };
 

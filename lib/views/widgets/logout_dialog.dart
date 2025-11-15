@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../services/storage_service.dart';
+import '../../services/notification_service.dart';
+import 'custom_notification.dart';
 
 class LogoutDialog {
   static Future<void> show(BuildContext context, VoidCallback onConfirm) {
@@ -96,8 +99,16 @@ class LogoutDialog {
                         elevation: 6,
                         shadowColor: Colors.orangeAccent,
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(context);
+                        await StorageService.clearSession();
+                        await NotificationService.instance.clearSession();
+                        if (context.mounted) {
+                          CustomNotification.showSuccess(
+                            context,
+                            'Cierre de sesión exitoso.',
+                          );
+                        }
                         onConfirm();
                       },
                       child: const Text(

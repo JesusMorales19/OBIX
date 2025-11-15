@@ -110,7 +110,7 @@ Container(
                                   "Contratista",
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 22,
+                                    fontSize: 17,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -152,7 +152,7 @@ Container(
                                   "Trabajador",
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 22,
+                                    fontSize: 17,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),

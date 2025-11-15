@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'modal_detail_short.dart';
 import 'modal_detail_length.dart';
 import 'package:url_launcher/url_launcher.dart';
+<<<<<<< HEAD
+=======
+import '../../custom_notification.dart';
+>>>>>>> feature/App-Terminada
 
 class WorkerCard extends StatelessWidget {
   final String title;
@@ -9,6 +13,7 @@ class WorkerCard extends StatelessWidget {
   final Color statusColor;
   final String ubication;
   final String payout;
+  final String? moneda;
   final bool isLongTerm;
   final int? vacancies;
   final String? contratista;
@@ -22,6 +27,13 @@ class WorkerCard extends StatelessWidget {
   final String? especialidad;
   final double? latitud;
   final double? longitud;
+<<<<<<< HEAD
+=======
+  final VoidCallback? onApply;
+  final bool canApply;
+  final bool showApplyButton;
+  final bool isApplying;
+>>>>>>> feature/App-Terminada
 
   const WorkerCard({
     super.key,
@@ -30,6 +42,7 @@ class WorkerCard extends StatelessWidget {
     required this.statusColor,
     required this.ubication,
     required this.payout,
+    this.moneda,
     required this.isLongTerm,
     this.vacancies,
     this.contratista,
@@ -43,12 +56,25 @@ class WorkerCard extends StatelessWidget {
     this.especialidad,
     this.latitud,
     this.longitud,
+<<<<<<< HEAD
+=======
+    this.onApply,
+    this.canApply = true,
+    this.showApplyButton = true,
+    this.isApplying = false,
+>>>>>>> feature/App-Terminada
   });
 
   Future<void> _abrirMapa(BuildContext context) async {
     if (latitud == null || longitud == null) {
+<<<<<<< HEAD
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No hay coordenadas disponibles para este trabajo.')),
+=======
+      CustomNotification.showError(
+        context,
+        'No hay coordenadas disponibles para este trabajo.',
+>>>>>>> feature/App-Terminada
       );
       return;
     }
@@ -56,8 +82,14 @@ class WorkerCard extends StatelessWidget {
     final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitud,$longitud');
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched) {
+<<<<<<< HEAD
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo abrir Maps.')),
+=======
+      CustomNotification.showError(
+        context,
+        'No se pudo abrir Maps.',
+>>>>>>> feature/App-Terminada
       );
     }
   }
@@ -117,7 +149,11 @@ class WorkerCard extends StatelessWidget {
           const SizedBox(height: 6),
           if (payout.isNotEmpty) ...[
             Text(
+<<<<<<< HEAD
               '${payoutLabel ?? 'Frecuencia de trabajo'}: $payout',
+=======
+              '${payoutLabel ?? 'Frecuencia de trabajo'}: $payout${moneda != null ? ' $moneda' : ''}',
+>>>>>>> feature/App-Terminada
               style: const TextStyle(
                 color: Color(0xFF1F4E79),
                 fontSize: 14,
@@ -126,6 +162,7 @@ class WorkerCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
           ],
+<<<<<<< HEAD
           if (ubication.isNotEmpty)
             const SizedBox(height: 6),
           TextButton.icon(
@@ -133,6 +170,35 @@ class WorkerCard extends StatelessWidget {
             icon: const Icon(Icons.map_outlined),
             label: const Text('Ver ubicación en Maps'),
           ),
+=======
+          // Mostrar ubicación: botón de Maps si hay coordenadas, dirección si no hay coordenadas pero hay dirección
+          if (latitud != null && longitud != null) ...[
+            const SizedBox(height: 6),
+            TextButton.icon(
+              onPressed: () => _abrirMapa(context),
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('Ver ubicación en Maps'),
+            ),
+          ] else if (ubication.isNotEmpty && ubication != 'Sin dirección') ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Icon(Icons.location_on, color: Color(0xFF1F4E79), size: 18),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    ubication,
+                    style: const TextStyle(
+                      color: Color(0xFF1F4E79),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+>>>>>>> feature/App-Terminada
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -156,7 +222,10 @@ class WorkerCard extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   if (isLongTerm) {
+<<<<<<< HEAD
                     // Mostrar modal de largo plazo con datos reales
+=======
+>>>>>>> feature/App-Terminada
                     ModalTrabajoLargo.show(
                       context,
                       titulo: title,
@@ -170,21 +239,32 @@ class WorkerCard extends StatelessWidget {
                       direccion: ubication,
                     );
                   } else {
+<<<<<<< HEAD
                     // Mostrar modal de corto plazo
+=======
+>>>>>>> feature/App-Terminada
                     ModalTrabajoCorto.show(
                       context,
                       titulo: title,
                       descripcion: descripcion ?? 'Sin descripción',
                       rangoPrecio: payout,
+<<<<<<< HEAD
                       ubicacion: ubication,
                       fotos: imagenesBase64 ?? const [],
                       disponibilidad: disponibilidad ?? 'No especificada',
                       especialidad: especialidad ?? 'No especificada',
+=======
+                      fotos: imagenesBase64 ?? const [],
+                      disponibilidad: disponibilidad ?? 'No especificada',
+                      especialidad: especialidad ?? 'No especificada',
+                      contratistaNombre: contratista,
+>>>>>>> feature/App-Terminada
                     );
                   }
                 },
                 style: TextButton.styleFrom(
                   backgroundColor: const Color(0xFFEAEAEA),
+<<<<<<< HEAD
                   minimumSize: const Size(120, 40),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -203,20 +283,51 @@ class WorkerCard extends StatelessWidget {
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1F4E79),
+=======
+>>>>>>> feature/App-Terminada
                   minimumSize: const Size(120, 40),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
                 child: const Text(
-                  'Aplicar Ahora',
+                  'Ver detalles',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF5A5A5A),
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
+              if (showApplyButton)
+                ElevatedButton(
+                  onPressed: (canApply && !isApplying) ? onApply : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1F4E79),
+                    minimumSize: const Size(120, 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    disabledBackgroundColor: const Color(0xFF5A6F90),
+                  ),
+                  child: isApplying
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Aplicar Ahora',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
             ],
           ),
         ],

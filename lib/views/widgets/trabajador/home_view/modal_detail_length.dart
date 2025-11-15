@@ -81,8 +81,11 @@ class ModalTrabajoLargo {
 
                       if (contratistaNombre != null)
                         _info(Icons.person, 'Contratista', contratistaNombre, primaryYellow),
+<<<<<<< HEAD
                       if (direccion != null && direccion.isNotEmpty)
                         _info(Icons.place, 'Dirección', direccion, secondaryOrange),
+=======
+>>>>>>> feature/App-Terminada
                       _info(Icons.people, 'Vacantes', '$vacantes', primaryYellow),
                       _info(Icons.schedule, 'Frecuencia de trabajo', frecuenciaPago, secondaryOrange),
                       _info(Icons.date_range, 'Fecha de inicio', fechaInicio, primaryYellow),
